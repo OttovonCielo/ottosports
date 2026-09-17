@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=0.9">
-  <title>Otto Sports - FC İkonlar & 2000 Sonrası Futbol Arenası</title>
+  <title>Otto Sports - Canlı Futbol Arenası</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
@@ -23,17 +23,15 @@
 <body class="bg-slate-950 text-slate-100 min-h-screen pb-12 selection:bg-emerald-500 selection:text-black">
   <div id="app" class="max-w-4xl mx-auto px-4 pt-4">
 
-    <!-- ZORUNLU GİRİŞ (NİCKNAME) MODALI -->
+    <!-- 1. AŞAMA: ZORUNLU NİCK BELİRLEME EKRANI -->
     <div v-if="!isNickChosen" class="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4">
       <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl max-w-sm w-full text-center space-y-4 shadow-2xl shadow-emerald-500/10">
         <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-emerald-400 to-cyan-500 p-0.5 shadow-lg">
-          <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-2xl">
-            ⚽
-          </div>
+          <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-2xl">⚽</div>
         </div>
         <div>
           <h2 class="text-xl font-black italic tracking-wide text-emerald-400">OTTO SPORTS ARENA</h2>
-          <p class="text-xs text-slate-400 mt-1">Lobiye ve maçlara katılmak için önce takma adını belirle.</p>
+          <p class="text-xs text-slate-400 mt-1">1. Adım: Önce Kullanıcı Adını (Nick) Belirle</p>
         </div>
         <div class="space-y-2.5">
           <input 
@@ -46,8 +44,50 @@
             @click="confirmNick" 
             :disabled="!tempNick.trim()"
             class="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black rounded-xl text-xs transition disabled:opacity-40">
-            Oyuna Giriş Yap
+            Devam Et (Oda Kur / Katıl)
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. AŞAMA: ODA BAĞLANTISI KURULMADAN OYUNU AÇMAYAN LOBİ EKRANI -->
+    <div v-if="isNickChosen && !isConnected" class="fixed inset-0 z-40 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4">
+      <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl max-w-md w-full text-center space-y-5 shadow-2xl">
+        <div>
+          <span class="text-[10px] uppercase font-black tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
+            Seçilen Mod: {{ currentModeTitle }}
+          </span>
+          <h2 class="text-xl font-black text-slate-100 mt-3">2. Adım: Rakip İle Eşleş</h2>
+          <p class="text-xs text-slate-400 mt-1">Hoş geldin <b class="text-emerald-400">{{ myNick }}</b>! Oyuna başlamak için oda kur veya koda katıl.</p>
+        </div>
+
+        <div class="space-y-4">
+          <!-- Oda Kurma -->
+          <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
+            <div v-if="!myPeerId">
+              <button @click="createRoom" class="w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs transition">
+                ⚡ Yeni Oda Kur (Host Ol)
+              </button>
+            </div>
+            <div v-else class="space-y-2">
+              <div class="text-xs text-slate-400">Oda Kodun:</div>
+              <div class="text-2xl font-black text-emerald-400 tracking-widest select-all">{{ roomCode }}</div>
+              <p class="text-[11px] text-amber-400 animate-pulse">⏳ Arkadaşının bu kodu yazıp bağlanması bekleniyor...</p>
+            </div>
+          </div>
+
+          <div class="text-xs font-black text-slate-600">VEYA</div>
+
+          <!-- Odaya Katılma -->
+          <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl space-y-2.5">
+            <input 
+              v-model="joinCodeInput" 
+              placeholder="Arkadaşının Oda Kodunu Gir..." 
+              class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-center text-xs uppercase font-bold outline-none focus:border-cyan-400">
+            <button @click="joinRoom" class="w-full py-2.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black rounded-xl text-xs transition">
+              Odaya Katıl ve Başla
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -81,13 +121,13 @@
             <h1 class="text-2xl font-black italic tracking-wider bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">
               OTTO SPORTS
             </h1>
-            <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">PRO ARENA</span>
+            <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">FC 26 & 2000+</span>
           </div>
-          <p class="text-[11px] text-slate-400">9 Büyük Lig & FC İkonlar Veri Tabanı</p>
+          <p class="text-[11px] text-slate-400">9 Büyük Lig & FC İkonlar Veri Tabanı (17.09.2026)</p>
         </div>
       </div>
 
-      <!-- Menü -->
+      <!-- Menü (Mod Değişince Odayı Sıfırlar ve Yeni Oda İster) -->
       <nav class="flex flex-wrap gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
         <button 
           v-for="m in modes" 
@@ -100,53 +140,30 @@
       </nav>
     </header>
 
-    <!-- CANLI LOBİ & AYIN OYUNCUSU SCOREBOARD -->
+    <!-- SCOREBOARD & ODA BİLGİSİ -->
     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 mb-4 space-y-3">
       <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div class="flex items-center gap-2.5">
+        <div class="flex items-center gap-2">
           <span class="relative flex h-2.5 w-2.5">
-            <span v-if="isConnected" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span :class="isConnected ? 'bg-emerald-500' : 'bg-rose-500'" class="relative inline-flex rounded-full h-2.5 w-2.5"></span>
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
           </span>
-          <div class="flex items-center gap-1.5">
-            <span class="text-[11px] text-slate-400">Giriş:</span>
-            <span class="bg-slate-950 border border-slate-700 text-[11px] px-2.5 py-0.5 rounded-lg text-emerald-400 font-black">
-              {{ myNick || 'Belirlenmedi' }}
-            </span>
-          </div>
+          <span class="text-[11px] text-slate-400">Durum: <b class="text-emerald-400">Canlı Eşleşildi</b></span>
         </div>
 
-        <div class="flex items-center gap-2 flex-wrap">
-          <div v-if="!isConnected && !myPeerId">
-            <button @click="createRoom" class="px-3 py-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-lg text-[11px]">
-              ⚡ Oda Kur
-            </button>
-          </div>
-
-          <div v-if="myPeerId && !isConnected" class="flex items-center gap-1.5 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-700">
-            <span class="text-[11px] text-slate-400">Oda Kodu:</span>
-            <b class="text-emerald-400 text-xs tracking-wider select-all">{{ roomCode }}</b>
-          </div>
-
-          <div v-if="!isConnected && !myPeerId" class="flex items-center gap-1">
-            <input 
-              v-model="joinCodeInput" 
-              placeholder="Oda Kodu" 
-              class="w-20 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-[11px] text-center uppercase outline-none focus:border-cyan-400 font-bold">
-            <button @click="joinRoom" class="px-2.5 py-1 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black rounded-lg text-[11px]">
-              Katıl
-            </button>
-          </div>
-
-          <div v-if="isConnected" class="text-[11px] bg-slate-950 border border-slate-700 px-2.5 py-1 rounded-lg text-slate-300">
-            Oda: <b class="text-cyan-400">{{ roomCode }}</b>
-          </div>
+        <div class="flex items-center gap-2">
+          <span class="text-[11px] bg-slate-950 border border-slate-700 px-2.5 py-1 rounded-lg text-slate-300">
+            Aktif Oda: <b class="text-cyan-400">{{ roomCode }}</b>
+          </span>
+          <button @click="leaveRoom" class="text-[10px] bg-rose-500/20 text-rose-300 border border-rose-500/30 px-2 py-1 rounded-lg hover:bg-rose-500/30 font-bold">
+            Odayı Kapat
+          </button>
         </div>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2 border-t border-slate-800/80">
         <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl flex items-center justify-between">
-          <span class="text-[11px] font-bold text-slate-300">{{ myNick || 'Sen' }}</span>
+          <span class="text-[11px] font-bold text-slate-300">{{ myNick }} (Sen)</span>
           <span class="text-emerald-400 font-black text-base">{{ myScore }} <small class="text-slate-500 text-[9px]">Puan</small></span>
         </div>
 
@@ -165,42 +182,40 @@
       </div>
     </div>
 
-    <!-- 1. OYUN: TIC-TAC-TOE (KULÜP, TURNUVA & BAYRAK LOGOLU) -->
-    <section v-if="activeMode === 'tictactoe'" class="space-y-4">
+    <!-- 1. OYUN: TIC-TAC-TOE -->
+    <section v-if="activeMode === 'tictactoe' && isConnected" class="space-y-4">
       <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 text-center">
         <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
           <div class="text-left">
             <h2 class="text-lg font-black text-emerald-400">Futbol Tic-Tac-Toe</h2>
-            <p class="text-[11px] text-slate-400">Kesişimi bil! Aramada ipuçları gizlenmiştir.</p>
+            <p class="text-[11px] text-slate-400">İki ekranda da tahta birebir aynıdır. Sırayla ortak futbolcuları bulun.</p>
           </div>
           <div class="flex gap-1.5">
-            <button @click="forfeitTurn" :disabled="!isMyTurn && isConnected" class="px-2.5 py-1 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 rounded-lg text-[11px] font-bold transition">
+            <button @click="forfeitTurn" :disabled="!isMyTurn" class="px-2.5 py-1 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 rounded-lg text-[11px] font-bold transition">
               🏳️ Pes Et
             </button>
-            <button v-if="isHost || !isConnected" @click="generateAdvancedBoard(true)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-[11px] font-bold border border-slate-700">
+            <button v-if="isHost" @click="generateAdvancedBoard(true)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-[11px] font-bold border border-slate-700">
               🔄 Yeni Tahta
             </button>
           </div>
         </div>
 
-        <div v-if="isConnected" class="mb-3">
+        <div class="mb-3">
           <span :class="isMyTurn ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-amber-500/20 text-amber-300 border-amber-500/40'" class="border px-3 py-1 rounded-full text-[11px] font-black inline-block">
-            {{ isMyTurn ? '🎯 Sıra Sende! Hatalı yazarsan sıra rakibe geçer.' : '⏳ Rakibin Hamlesi Bekleniyor...' }}
+            {{ isMyTurn ? '🎯 Sıra Sende! Bir hücre seçip futbolcu yaz.' : '⏳ Rakibin Hamlesi Bekleniyor...' }}
           </span>
         </div>
 
-        <!-- 4x4 Grid - Başlıklarda Kulüp Logosu, Turnuva Logosu veya Ülke Bayrağı -->
+        <!-- 4x4 Grid -->
         <div class="inline-grid grid-cols-4 gap-1.5 bg-slate-950 p-2.5 rounded-xl border border-slate-800 max-w-full overflow-x-auto">
           <div class="w-20 h-20 sm:w-24 sm:h-24"></div>
           
-          <!-- Sütun Başlıkları -->
           <div v-for="col in tttCols" :key="col.id" class="w-20 h-20 sm:w-24 sm:h-24 bg-slate-900 rounded-xl flex flex-col items-center justify-center p-1.5 text-center border border-slate-800">
             <img v-if="getVisualLogo(col.label)" :src="getVisualLogo(col.label)" class="w-7 h-7 sm:w-8 sm:h-8 object-contain mb-1 drop-shadow rounded-sm">
             <span v-else class="text-xl mb-1">🤝</span>
             <span class="text-[9px] sm:text-[10px] font-black text-cyan-400 leading-tight line-clamp-2">{{ col.label }}</span>
           </div>
 
-          <!-- Satır Başlıkları ve Hücreler -->
           <template v-for="(row, rIdx) in tttRows" :key="row.id">
             <div class="w-20 h-20 sm:w-24 sm:h-24 bg-slate-900 rounded-xl flex flex-col items-center justify-center p-1.5 text-center border border-slate-800">
               <img v-if="getVisualLogo(row.label)" :src="getVisualLogo(row.label)" class="w-7 h-7 sm:w-8 sm:h-8 object-contain mb-1 drop-shadow rounded-sm">
@@ -254,15 +269,15 @@
     </section>
 
     <!-- 2. OYUN: 3-2-1 KULÜP / ÜLKE -->
-    <section v-if="activeMode === 'three_two_one'" class="space-y-4">
+    <section v-if="activeMode === 'three_two_one' && isConnected" class="space-y-4">
       <div :class="pairFlashClass" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 text-center transition-colors duration-300">
         <div class="flex justify-between items-center mb-3 flex-wrap gap-2">
           <div class="text-left">
             <h2 class="text-lg font-black text-teal-400">3 - 2 - 1 Arenası (İlk 3 Yapan Kazanır)</h2>
-            <p class="text-[11px] text-slate-400">Her soru için 10 saniye! Doğru: Yeşil, Hatalı: Kırmızı.</p>
+            <p class="text-[11px] text-slate-400">İki ekranda da aynı eşleşme! 10 saniye içinde ortak futbolcuyu yaz.</p>
           </div>
 
-          <div class="flex items-center bg-slate-950 p-1 rounded-lg border border-slate-800 text-[11px]">
+          <div v-if="isHost" class="flex items-center bg-slate-950 p-1 rounded-lg border border-slate-800 text-[11px]">
             <button 
               @click="setPairCategory('club_club')" 
               :class="pairCategory === 'club_club' ? 'bg-teal-500 text-slate-950 font-black' : 'text-slate-400'"
@@ -292,7 +307,7 @@
           </div>
         </div>
 
-        <!-- Takım Logolu / Ülke Bayraklı VS Alanı -->
+        <!-- Birebir Senkronize Eşleşme Alanı -->
         <div class="flex items-center justify-center gap-3 sm:gap-6 my-4">
           <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl w-36 text-center flex flex-col items-center">
             <img v-if="getVisualLogo(randomPair.t1)" :src="getVisualLogo(randomPair.t1)" class="w-12 h-12 object-contain mb-1.5 drop-shadow rounded-sm">
@@ -326,7 +341,7 @@
 
           <div class="flex justify-center gap-1.5 pt-1">
             <button @click="checkPair(pairInput)" class="bg-teal-500 hover:bg-teal-400 text-slate-950 font-black px-4 py-1.5 rounded-lg text-xs">ONAYLA</button>
-            <button v-if="isHost || !isConnected" @click="generateRandomPair(true)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-3 py-1.5 rounded-lg text-xs">Pas / Yeni Tur</button>
+            <button v-if="isHost" @click="generateRandomPair(true)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-3 py-1.5 rounded-lg text-xs">Pas / Yeni Eşleşme</button>
           </div>
           <p v-if="pairFeedback" :class="pairFeedback.success ? 'text-emerald-400' : 'text-rose-400'" class="text-xs font-bold mt-1.5 text-center">
             {{ pairFeedback.text }}
@@ -336,7 +351,7 @@
     </section>
 
     <!-- 3. OYUN: HEDEFİ TUTTUR -->
-    <section v-if="activeMode === 'target'" class="space-y-4">
+    <section v-if="activeMode === 'target' && isConnected" class="space-y-4">
       <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 text-center">
         <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
           <div class="text-left">
@@ -345,11 +360,11 @@
               <span>{{ currentChallenge.title }}</span>
             </div>
             <p class="text-[11px] text-slate-400">
-              Kafandan hesapla! <b class="text-slate-200">{{ currentMaxPicks }} oyuncu</b> ile hedef: <b class="text-cyan-400">{{ targetGoal }} {{ currentChallenge.unit }}</b>
+              İki oyuncu için de ortak hedef: <b class="text-cyan-400">{{ targetGoal }} {{ currentChallenge.unit }}</b> (<b class="text-slate-200">{{ currentMaxPicks }} oyuncu</b>)
             </p>
           </div>
-          <button v-if="isHost || !isConnected" @click="resetTargetRound(true)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-[11px] font-bold border border-slate-700">
-            🎲 Yeni Hedef Çek
+          <button v-if="isHost" @click="resetTargetRound(true)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-[11px] font-bold border border-slate-700">
+            🎲 Yeni Hedef Belirle
           </button>
         </div>
 
@@ -405,7 +420,7 @@
               <span class="text-lg font-black text-amber-400">{{ Math.abs(targetGoal - targetTotal) }}</span>
             </div>
           </div>
-          <button @click="resetTargetRound(true)" class="mt-2 px-3 py-1 bg-slate-800 hover:bg-slate-700 text-[11px] font-bold rounded-lg text-slate-200">
+          <button v-if="isHost" @click="resetTargetRound(true)" class="mt-2 px-3 py-1 bg-slate-800 hover:bg-slate-700 text-[11px] font-bold rounded-lg text-slate-200">
             Yeni Tura Başla
           </button>
         </div>
@@ -445,11 +460,15 @@
         const myScore = ref(0);
         const opponentScore = ref(0);
 
+        const currentModeTitle = computed(() => {
+          const m = modes.find(x => x.id === activeMode.value);
+          return m ? m.title : '';
+        });
+
         const confirmNick = () => {
           if (!tempNick.value.trim()) return;
           myNick.value = tempNick.value.trim();
           isNickChosen.value = true;
-          if (isConnected.value) syncNick();
         };
 
         const currentMonthName = computed(() => {
@@ -465,10 +484,9 @@
         const usedPlayersThisRound = ref([]);
 
         // =========================================================================
-        // GÜNCEL KULÜP, TURNUVA & ÜLKE BAYRAKLARI LOGO VERİ TABANI
+        // GÜNCEL LOGO / BAYRAK HAVUZU
         // =========================================================================
         const visualLogos = {
-          // Kulüpler
           "Real Madrid": "https://upload.wikimedia.org/wikipedia/en/5/56/Real_Madrid_CF.svg",
           "Barcelona": "https://upload.wikimedia.org/wikipedia/en/4/47/FC_Barcelona_%28crest%29.svg",
           "Inter": "https://upload.wikimedia.org/wikipedia/commons/0/05/FC_Internazionale_Milano_2021.svg",
@@ -491,13 +509,9 @@
           "Juventus": "https://upload.wikimedia.org/wikipedia/commons/1/15/Juventus_FC_2017_logo.svg",
           "Arsenal": "https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg",
           "Borussia Dortmund": "https://upload.wikimedia.org/wikipedia/commons/6/67/Borussia_Dortmund_logo.svg",
-
-          // Turnuva Logoları (Şampiyonlar Ligi, Dünya Kupası vb.)
           "🏆 ŞL Kazandı": "https://upload.wikimedia.org/wikipedia/en/b/bf/UEFA_Champions_League_logo_2.svg",
           "💔 ŞL Finalisti": "https://upload.wikimedia.org/wikipedia/en/b/bf/UEFA_Champions_League_logo_2.svg",
           "⭐ Dünya Kupası": "https://upload.wikimedia.org/wikipedia/commons/e/ec/FIFA_World_Cup_Trophy.svg",
-
-          // Ülke Bayrakları
           "🇹🇷 Türkiye": "https://upload.wikimedia.org/wikipedia/commons/b/b4/Flag_of_Turkey.svg",
           "Türkiye": "https://upload.wikimedia.org/wikipedia/commons/b/b4/Flag_of_Turkey.svg",
           "🇦🇷 Arjantin": "https://upload.wikimedia.org/wikipedia/commons/1/1a/Flag_of_Argentina.svg",
@@ -515,22 +529,16 @@
           "🇩🇪 Almanya": "https://upload.wikimedia.org/wikipedia/commons/b/ba/Flag_of_Germany.svg",
           "Almanya": "https://upload.wikimedia.org/wikipedia/commons/b/ba/Flag_of_Germany.svg",
           "🇮🇹 İtalya": "https://upload.wikimedia.org/wikipedia/commons/0/03/Flag_of_Italy.svg",
-          "İtalya": "https://upload.wikimedia.org/wikipedia/commons/0/03/Flag_of_Italy.svg",
-          "🏴󠁧󠁢󠁥󠁮󠁧󠁿 İngiltere": "https://upload.wikimedia.org/wikipedia/en/b/be/Flag_of_England.svg",
-          "İngiltere": "https://upload.wikimedia.org/wikipedia/en/b/be/Flag_of_England.svg",
-          "🇪🇸 İspanya": "https://upload.wikimedia.org/wikipedia/commons/9/9a/Flag_of_Spain.svg",
-          "İspanya": "https://upload.wikimedia.org/wikipedia/commons/9/9a/Flag_of_Spain.svg"
+          "İtalya": "https://upload.wikimedia.org/wikipedia/commons/0/03/Flag_of_Italy.svg"
         };
 
-        const getVisualLogo = (label) => {
-          return visualLogos[label] || null;
-        };
+        const getVisualLogo = (label) => visualLogos[label] || null;
 
         // =========================================================================
-        // TÜM FC İKONLARI + 2000 SONRASI 9 LİGİN TÜM YILDIZLARI
+        // FC 26 İKONLAR + 2000 SONRASI (17.09.2026 İTİBARIYLA GÜNCEL KADROLAR)
         // =========================================================================
         const playersDB = [
-          // FC İkonları
+          // FC 26 İkonları
           { name: "Pelé", nat: "Brezilya", clubs: ["Santos", "New York Cosmos"], teammateWith: ["Garrincha"], trophiesWon: ["Dünya Kupası"], finalsLost: [], weight: 73, height: 173, age: 82, assists: 210, yellowCards: 10 },
           { name: "Diego Maradona", nat: "Arjantin", clubs: ["Barcelona", "Napoli", "Sevilla", "Boca Juniors"], teammateWith: ["Careca"], trophiesWon: ["Dünya Kupası", "UEFA Kupası", "Serie A"], finalsLost: ["Dünya Kupası 1990"], weight: 70, height: 165, age: 60, assists: 152, yellowCards: 48 },
           { name: "Johan Cruyff", nat: "Hollanda", clubs: ["Ajax", "Barcelona", "Feyenoord"], teammateWith: ["Ruud Krol"], trophiesWon: ["Şampiyonlar Ligi", "La Liga", "Eredivisie"], finalsLost: ["Dünya Kupası 1974"], weight: 68, height: 178, age: 68, assists: 190, yellowCards: 25 },
@@ -548,28 +556,11 @@
           { name: "Wayne Rooney", nat: "İngiltere", clubs: ["Everton", "Manchester United"], teammateWith: ["Cristiano Ronaldo", "Robin van Persie"], trophiesWon: ["Şampiyonlar Ligi", "Premier Lig"], finalsLost: ["Şampiyonlar Ligi 2009", "Şampiyonlar Ligi 2011"], weight: 83, height: 176, age: 38, assists: 175, yellowCards: 110 },
           { name: "Gareth Bale", nat: "Galler", clubs: ["Tottenham", "Real Madrid", "Southampton"], teammateWith: ["Cristiano Ronaldo", "Karim Benzema", "Luka Modric"], trophiesWon: ["Şampiyonlar Ligi", "La Liga"], finalsLost: [], weight: 81, height: 185, age: 35, assists: 140, yellowCards: 32 },
 
-          // 2000 Sonrası Kült ve Modern Yıldızlar
-          { name: "Cristiano Ronaldo", nat: "Portekiz", clubs: ["Sporting", "Manchester United", "Real Madrid", "Juventus", "Al Nassr"], teammateWith: ["Karim Benzema", "Wayne Rooney", "Pepe", "Luka Modric"], trophiesWon: ["Şampiyonlar Ligi", "EURO 2016", "Premier Lig", "La Liga", "Serie A"], finalsLost: ["EURO 2004", "Şampiyonlar Ligi 2009"], weight: 83, height: 187, age: 39, assists: 250, yellowCards: 115 },
-          { name: "Lionel Messi", nat: "Arjantin", clubs: ["Barcelona", "PSG", "Inter Miami"], teammateWith: ["Neymar", "Luis Suarez", "Kylian Mbappe", "Angel Di Maria"], trophiesWon: ["Dünya Kupası", "Şampiyonlar Ligi", "Copa America", "La Liga", "Ligue 1"], finalsLost: ["Dünya Kupası 2014", "Copa America 2015", "Copa America 2016"], weight: 72, height: 170, age: 37, assists: 380, yellowCards: 36 },
-          { name: "Ricardo Quaresma", nat: "Portekiz", clubs: ["Sporting", "Barcelona", "Porto", "Inter", "Chelsea", "Beşiktaş", "Kasımpaşa"], teammateWith: ["Cristiano Ronaldo", "Pepe"], trophiesWon: ["EURO 2016", "Şampiyonlar Ligi", "Süper Lig", "Primeira Liga"], finalsLost: ["EURO 2004"], weight: 67, height: 175, age: 41, assists: 165, yellowCards: 98 },
-          { name: "Pepe", nat: "Portekiz", clubs: ["Porto", "Real Madrid", "Beşiktaş"], teammateWith: ["Cristiano Ronaldo", "Sergio Ramos", "Ricardo Quaresma"], trophiesWon: ["Şampiyonlar Ligi", "EURO 2016", "La Liga", "Primeira Liga"], finalsLost: ["UEFA Süper Kupa 2018"], weight: 81, height: 188, age: 41, assists: 20, yellowCards: 165 },
-          { name: "Wesley Sneijder", nat: "Hollanda", clubs: ["Ajax", "Real Madrid", "Inter", "Galatasaray", "Nice"], teammateWith: ["Samuel Eto'o", "Didier Drogba", "Robin van Persie", "Arda Turan"], trophiesWon: ["Şampiyonlar Ligi", "Serie A", "Süper Lig", "La Liga", "Eredivisie"], finalsLost: ["Dünya Kupası 2010"], weight: 72, height: 170, age: 40, assists: 145, yellowCards: 55 },
-          { name: "Robin van Persie", nat: "Hollanda", clubs: ["Feyenoord", "Arsenal", "Manchester United", "Fenerbahçe"], teammateWith: ["Wayne Rooney", "Wesley Sneijder"], trophiesWon: ["Premier Lig", "UEFA Kupası", "FA Cup"], finalsLost: ["Dünya Kupası 2010", "Şampiyonlar Ligi 2006"], weight: 71, height: 183, age: 41, assists: 95, yellowCards: 48 },
-          { name: "Alex de Souza", nat: "Brezilya", clubs: ["Palmeiras", "Cruzeiro", "Parma", "Fenerbahçe"], teammateWith: ["Roberto Carlos", "Stephen Appiah"], trophiesWon: ["Süper Lig", "Copa America"], finalsLost: ["Türkiye Kupası 2005"], weight: 74, height: 175, age: 47, assists: 210, yellowCards: 42 },
-          { name: "Didier Drogba", nat: "Fildişi Sahili", clubs: ["Marsilya", "Chelsea", "Galatasaray"], teammateWith: ["Frank Lampard", "John Terry", "Wesley Sneijder"], trophiesWon: ["Şampiyonlar Ligi", "Premier Lig", "Süper Lig"], finalsLost: ["Şampiyonlar Ligi 2008"], weight: 88, height: 188, age: 46, assists: 125, yellowCards: 62 },
-          { name: "Arda Turan", nat: "Türkiye", clubs: ["Galatasaray", "Atletico Madrid", "Barcelona", "Başakşehir"], teammateWith: ["Lionel Messi", "Radamel Falcao"], trophiesWon: ["La Liga", "UEFA Avrupa Ligi", "Süper Lig"], finalsLost: ["Şampiyonlar Ligi 2014"], weight: 76, height: 177, age: 37, assists: 130, yellowCards: 78 },
-          { name: "Mesut Özil", nat: "Almanya", clubs: ["Schalke 04", "Werder Bremen", "Real Madrid", "Arsenal", "Fenerbahçe", "Başakşehir"], teammateWith: ["Cristiano Ronaldo", "Arda Güler"], trophiesWon: ["Dünya Kupası", "La Liga", "FA Cup"], finalsLost: [], weight: 76, height: 180, age: 35, assists: 222, yellowCards: 32 },
-          { name: "Radamel Falcao", nat: "Kolombiya", clubs: ["River Plate", "Porto", "Atletico Madrid", "Monaco", "Manchester United", "Chelsea", "Galatasaray"], teammateWith: ["James Rodriguez", "Hulk", "Arda Turan", "Kylian Mbappe"], trophiesWon: ["UEFA Avrupa Ligi", "Ligue 1", "Primeira Liga"], finalsLost: [], weight: 72, height: 177, age: 38, assists: 54, yellowCards: 45 },
-          { name: "Hulk", nat: "Brezilya", clubs: ["Porto", "Zenit", "Atletico Mineiro"], teammateWith: ["Radamel Falcao", "James Rodriguez"], trophiesWon: ["UEFA Avrupa Ligi", "Primeira Liga"], finalsLost: [], weight: 86, height: 180, age: 38, assists: 160, yellowCards: 88 },
-          { name: "Eden Hazard", nat: "Belçika", clubs: ["Lille", "Chelsea", "Real Madrid"], teammateWith: ["N'Golo Kante", "Karim Benzema", "Kevin De Bruyne", "Romelu Lukaku"], trophiesWon: ["Şampiyonlar Ligi", "Premier Lig", "La Liga", "Ligue 1"], finalsLost: [], weight: 74, height: 175, age: 33, assists: 155, yellowCards: 26 },
-          { name: "Romelu Lukaku", nat: "Belçika", clubs: ["Anderlecht", "Chelsea", "Everton", "Manchester United", "Inter", "Roma", "Napoli"], teammateWith: ["Kevin De Bruyne", "Eden Hazard", "Lautaro Martinez"], trophiesWon: ["Serie A", "Belçika Ligi"], finalsLost: ["Şampiyonlar Ligi 2023"], weight: 103, height: 191, age: 31, assists: 92, yellowCards: 34 },
-          { name: "Kevin De Bruyne", nat: "Belçika", clubs: ["Genk", "Chelsea", "Wolfsburg", "Manchester City"], teammateWith: ["Erling Haaland", "Eden Hazard", "Romelu Lukaku"], trophiesWon: ["Şampiyonlar Ligi", "Premier Lig", "Belçika Ligi"], finalsLost: ["Şampiyonlar Ligi 2021"], weight: 70, height: 181, age: 33, assists: 285, yellowCards: 42 },
-          { name: "Angel Di Maria", nat: "Arjantin", clubs: ["Benfica", "Real Madrid", "Manchester United", "PSG", "Juventus"], teammateWith: ["Lionel Messi", "Cristiano Ronaldo", "Kylian Mbappe"], trophiesWon: ["Dünya Kupası", "Şampiyonlar Ligi", "La Liga", "Ligue 1", "Primeira Liga"], finalsLost: ["Dünya Kupası 2014", "Şampiyonlar Ligi 2020"], weight: 75, height: 180, age: 36, assists: 270, yellowCards: 48 },
-          { name: "Dries Mertens", nat: "Belçika", clubs: ["Utrecht", "PSV", "Napoli", "Galatasaray"], teammateWith: ["Victor Osimhen", "Mauro Icardi", "Eden Hazard"], trophiesWon: ["Serie A", "Süper Lig", "Coppa Italia", "KNVB Beker"], finalsLost: [], weight: 61, height: 169, age: 37, assists: 182, yellowCards: 52 },
-          { name: "Dusan Tadic", nat: "Sırbistan", clubs: ["Twente", "Southampton", "Ajax", "Fenerbahçe"], teammateWith: ["Edin Dzeko"], trophiesWon: ["Eredivisie", "KNVB Beker"], finalsLost: [], weight: 76, height: 181, age: 35, assists: 240, yellowCards: 38 },
+          // 2000 Sonrası & 17.09.2026 İtibarıyla Güncel Yıldızlar
           { name: "Victor Osimhen", nat: "Nijerya", clubs: ["Wolfsburg", "Charleroi", "Lille", "Napoli", "Galatasaray"], teammateWith: ["Dries Mertens", "Mauro Icardi"], trophiesWon: ["Serie A"], finalsLost: ["Afrika Uluslar Kupası 2024"], weight: 78, height: 186, age: 25, assists: 32, yellowCards: 24 },
           { name: "Mauro Icardi", nat: "Arjantin", clubs: ["Sampdoria", "Inter", "PSG", "Galatasaray"], teammateWith: ["Lionel Messi", "Kylian Mbappe", "Dries Mertens"], trophiesWon: ["Ligue 1", "Süper Lig"], finalsLost: ["Şampiyonlar Ligi 2020"], weight: 75, height: 181, age: 31, assists: 55, yellowCards: 22 },
           { name: "Edin Dzeko", nat: "Bosna Hersek", clubs: ["Wolfsburg", "Manchester City", "Roma", "Inter", "Fenerbahçe"], teammateWith: ["Lautaro Martinez", "Dusan Tadic"], trophiesWon: ["Premier Lig", "Bundesliga", "Coppa Italia"], finalsLost: ["Şampiyonlar Ligi 2023"], weight: 84, height: 193, age: 38, assists: 145, yellowCards: 44 },
+          { name: "Dusan Tadic", nat: "Sırbistan", clubs: ["Twente", "Southampton", "Ajax", "Fenerbahçe"], teammateWith: ["Edin Dzeko"], trophiesWon: ["Eredivisie", "KNVB Beker"], finalsLost: [], weight: 76, height: 181, age: 35, assists: 240, yellowCards: 38 },
           { name: "Fred", nat: "Brezilya", clubs: ["Shakhtar Donetsk", "Manchester United", "Fenerbahçe"], teammateWith: ["Edin Dzeko"], trophiesWon: ["Carabao Cup"], finalsLost: ["UEFA Avrupa Ligi 2021"], weight: 64, height: 169, age: 31, assists: 48, yellowCards: 80 },
           { name: "Fernando Muslera", nat: "Uruguay", clubs: ["Lazio", "Galatasaray"], teammateWith: ["Luis Suarez", "Mauro Icardi"], trophiesWon: ["Copa America", "Süper Lig", "Coppa Italia"], finalsLost: [], weight: 84, height: 190, age: 38, assists: 1, yellowCards: 55 },
           { name: "Rafa Silva", nat: "Portekiz", clubs: ["Braga", "Benfica", "Beşiktaş"], teammateWith: ["Angel Di Maria", "Ciro Immobile", "Cristiano Ronaldo"], trophiesWon: ["EURO 2016", "Primeira Liga"], finalsLost: [], weight: 66, height: 172, age: 31, assists: 110, yellowCards: 40 },
@@ -582,6 +573,22 @@
           { name: "Erling Haaland", nat: "Norveç", clubs: ["RB Salzburg", "Borussia Dortmund", "Manchester City"], teammateWith: ["Kevin De Bruyne", "Jude Bellingham"], trophiesWon: ["Şampiyonlar Ligi", "Premier Lig"], finalsLost: [], weight: 88, height: 194, age: 24, assists: 52, yellowCards: 24 },
           { name: "Vinicius Junior", nat: "Brezilya", clubs: ["Flamengo", "Real Madrid"], teammateWith: ["Kylian Mbappe", "Jude Bellingham", "Luka Modric"], trophiesWon: ["Şampiyonlar Ligi", "La Liga"], finalsLost: ["Copa America 2021"], weight: 73, height: 176, age: 24, assists: 95, yellowCards: 48 },
           { name: "Jude Bellingham", nat: "İngiltere", clubs: ["Borussia Dortmund", "Real Madrid"], teammateWith: ["Erling Haaland", "Vinicius Junior", "Kylian Mbappe"], trophiesWon: ["Şampiyonlar Ligi", "La Liga"], finalsLost: ["EURO 2020", "EURO 2024"], weight: 77, height: 186, age: 21, assists: 48, yellowCards: 42 },
+          { name: "Cristiano Ronaldo", nat: "Portekiz", clubs: ["Sporting", "Manchester United", "Real Madrid", "Juventus", "Al Nassr"], teammateWith: ["Karim Benzema", "Wayne Rooney", "Pepe", "Luka Modric"], trophiesWon: ["Şampiyonlar Ligi", "EURO 2016", "Premier Lig", "La Liga", "Serie A"], finalsLost: ["EURO 2004", "Şampiyonlar Ligi 2009"], weight: 83, height: 187, age: 39, assists: 250, yellowCards: 115 },
+          { name: "Lionel Messi", nat: "Arjantin", clubs: ["Barcelona", "PSG", "Inter Miami"], teammateWith: ["Neymar", "Luis Suarez", "Kylian Mbappe", "Angel Di Maria"], trophiesWon: ["Dünya Kupası", "Şampiyonlar Ligi", "Copa America", "La Liga", "Ligue 1"], finalsLost: ["Dünya Kupası 2014", "Copa America 2015", "Copa America 2016"], weight: 72, height: 170, age: 37, assists: 380, yellowCards: 36 },
+          { name: "Ricardo Quaresma", nat: "Portekiz", clubs: ["Sporting", "Barcelona", "Porto", "Inter", "Chelsea", "Beşiktaş", "Kasımpaşa"], teammateWith: ["Cristiano Ronaldo", "Pepe"], trophiesWon: ["EURO 2016", "Şampiyonlar Ligi", "Süper Lig", "Primeira Liga"], finalsLost: ["EURO 2004"], weight: 67, height: 175, age: 41, assists: 165, yellowCards: 98 },
+          { name: "Pepe", nat: "Portekiz", clubs: ["Porto", "Real Madrid", "Beşiktaş"], teammateWith: ["Cristiano Ronaldo", "Sergio Ramos", "Ricardo Quaresma"], trophiesWon: ["Şampiyonlar Ligi", "EURO 2016", "La Liga", "Primeira Liga"], finalsLost: ["UEFA Süper Kupa 2018"], weight: 81, height: 188, age: 41, assists: 20, yellowCards: 165 },
+          { name: "Wesley Sneijder", nat: "Hollanda", clubs: ["Ajax", "Real Madrid", "Inter", "Galatasaray", "Nice"], teammateWith: ["Samuel Eto'o", "Didier Drogba", "Robin van Persie", "Arda Turan"], trophiesWon: ["Şampiyonlar Ligi", "Serie A", "Süper Lig", "La Liga", "Eredivisie"], finalsLost: ["Dünya Kupası 2010"], weight: 72, height: 170, age: 40, assists: 145, yellowCards: 55 },
+          { name: "Robin van Persie", nat: "Hollanda", clubs: ["Feyenoord", "Arsenal", "Manchester United", "Fenerbahçe"], teammateWith: ["Wayne Rooney", "Wesley Sneijder"], trophiesWon: ["Premier Lig", "UEFA Kupası", "FA Cup"], finalsLost: ["Dünya Kupası 2010", "Şampiyonlar Ligi 2006"], weight: 71, height: 183, age: 41, assists: 95, yellowCards: 48 },
+          { name: "Alex de Souza", nat: "Brezilya", clubs: ["Palmeiras", "Cruzeiro", "Parma", "Fenerbahçe"], teammateWith: ["Roberto Carlos", "Stephen Appiah"], trophiesWon: ["Süper Lig", "Copa America"], finalsLost: ["Türkiye Kupası 2005"], weight: 74, height: 175, age: 47, assists: 210, yellowCards: 42 },
+          { name: "Didier Drogba", nat: "Fildişi Sahili", clubs: ["Marsilya", "Chelsea", "Galatasaray"], teammateWith: ["Frank Lampard", "John Terry", "Wesley Sneijder"], trophiesWon: ["Şampiyonlar Ligi", "Premier Lig", "Süper Lig"], finalsLost: ["Şampiyonlar Ligi 2008"], weight: 88, height: 188, age: 46, assists: 125, yellowCards: 62 },
+          { name: "Arda Turan", nat: "Türkiye", clubs: ["Galatasaray", "Atletico Madrid", "Barcelona", "Başakşehir"], teammateWith: ["Lionel Messi", "Radamel Falcao"], trophiesWon: ["La Liga", "UEFA Avrupa Ligi", "Süper Lig"], finalsLost: ["Şampiyonlar Ligi 2014"], weight: 76, height: 177, age: 37, assists: 130, yellowCards: 78 },
+          { name: "Mesut Özil", nat: "Almanya", clubs: ["Schalke 04", "Werder Bremen", "Real Madrid", "Arsenal", "Fenerbahçe", "Başakşehir"], teammateWith: ["Cristiano Ronaldo", "Arda Güler"], trophiesWon: ["Dünya Kupası", "La Liga", "FA Cup"], finalsLost: [], weight: 76, height: 180, age: 35, assists: 222, yellowCards: 32 },
+          { name: "Radamel Falcao", nat: "Kolombiya", clubs: ["River Plate", "Porto", "Atletico Madrid", "Monaco", "Manchester United", "Chelsea", "Galatasaray"], teammateWith: ["James Rodriguez", "Hulk", "Arda Turan", "Kylian Mbappe"], trophiesWon: ["UEFA Avrupa Ligi", "Ligue 1", "Primeira Liga"], finalsLost: [], weight: 72, height: 177, age: 38, assists: 54, yellowCards: 45 },
+          { name: "Eden Hazard", nat: "Belçika", clubs: ["Lille", "Chelsea", "Real Madrid"], teammateWith: ["N'Golo Kante", "Karim Benzema", "Kevin De Bruyne", "Romelu Lukaku"], trophiesWon: ["Şampiyonlar Ligi", "Premier Lig", "La Liga", "Ligue 1"], finalsLost: [], weight: 74, height: 175, age: 33, assists: 155, yellowCards: 26 },
+          { name: "Romelu Lukaku", nat: "Belçika", clubs: ["Anderlecht", "Chelsea", "Everton", "Manchester United", "Inter", "Roma", "Napoli"], teammateWith: ["Kevin De Bruyne", "Eden Hazard", "Lautaro Martinez"], trophiesWon: ["Serie A", "Belçika Ligi"], finalsLost: ["Şampiyonlar Ligi 2023"], weight: 103, height: 191, age: 31, assists: 92, yellowCards: 34 },
+          { name: "Kevin De Bruyne", nat: "Belçika", clubs: ["Genk", "Chelsea", "Wolfsburg", "Manchester City"], teammateWith: ["Erling Haaland", "Eden Hazard", "Romelu Lukaku"], trophiesWon: ["Şampiyonlar Ligi", "Premier Lig", "Belçika Ligi"], finalsLost: ["Şampiyonlar Ligi 2021"], weight: 70, height: 181, age: 33, assists: 285, yellowCards: 42 },
+          { name: "Angel Di Maria", nat: "Arjantin", clubs: ["Benfica", "Real Madrid", "Manchester United", "PSG", "Juventus"], teammateWith: ["Lionel Messi", "Cristiano Ronaldo", "Kylian Mbappe"], trophiesWon: ["Dünya Kupası", "Şampiyonlar Ligi", "La Liga", "Ligue 1", "Primeira Liga"], finalsLost: ["Dünya Kupası 2014", "Şampiyonlar Ligi 2020"], weight: 75, height: 180, age: 36, assists: 270, yellowCards: 48 },
+          { name: "Dries Mertens", nat: "Belçika", clubs: ["Utrecht", "PSV", "Napoli", "Galatasaray"], teammateWith: ["Victor Osimhen", "Mauro Icardi", "Eden Hazard"], trophiesWon: ["Serie A", "Süper Lig", "Coppa Italia", "KNVB Beker"], finalsLost: [], weight: 61, height: 169, age: 37, assists: 182, yellowCards: 52 },
           { name: "Mohamed Salah", nat: "Mısır", clubs: ["Chelsea", "Roma", "Liverpool"], teammateWith: ["Virgil van Dijk"], trophiesWon: ["Şampiyonlar Ligi", "Premier Lig"], finalsLost: ["Şampiyonlar Ligi 2018", "Şampiyonlar Ligi 2022"], weight: 73, height: 175, age: 32, assists: 155, yellowCards: 22 },
           { name: "Harry Kane", nat: "İngiltere", clubs: ["Tottenham", "Bayern Münih"], teammateWith: ["Son Heung-min"], trophiesWon: [], finalsLost: ["Şampiyonlar Ligi 2019", "EURO 2020", "EURO 2024"], weight: 89, height: 188, age: 31, assists: 110, yellowCards: 46 },
           { name: "Robert Lewandowski", nat: "Polonya", clubs: ["Borussia Dortmund", "Bayern Münih", "Barcelona"], teammateWith: ["Lamine Yamal"], trophiesWon: ["Şampiyonlar Ligi", "Bundesliga", "La Liga"], finalsLost: ["Şampiyonlar Ligi 2013"], weight: 81, height: 185, age: 36, assists: 150, yellowCards: 82 },
@@ -628,20 +635,20 @@
         const generateAdvancedBoard = (sync = false) => {
           const validBoardPresets = [
             {
-              rows: [criteriaPool[0], criteriaPool[4], criteriaPool[12]], // Real Madrid, Galatasaray, Arjantin
-              cols: [criteriaPool[1], criteriaPool[18], criteriaPool[21]]  // Barcelona, ŞL Kazandı, CR7 Takım Ark.
+              rows: [criteriaPool[0], criteriaPool[4], criteriaPool[12]],
+              cols: [criteriaPool[1], criteriaPool[18], criteriaPool[21]]
             },
             {
-              rows: [criteriaPool[6], criteriaPool[7], criteriaPool[13]], // Beşiktaş, Porto, Portekiz
-              cols: [criteriaPool[0], criteriaPool[18], criteriaPool[20]]  // Real Madrid, ŞL Kazandı, ŞL Finalisti
+              rows: [criteriaPool[6], criteriaPool[7], criteriaPool[13]],
+              cols: [criteriaPool[0], criteriaPool[18], criteriaPool[20]]
             },
             {
-              rows: [criteriaPool[9], criteriaPool[14], criteriaPool[15]], // Ajax, Hollanda, Belçika
-              cols: [criteriaPool[2], criteriaPool[3], criteriaPool[10]]   // Inter, Milan, Chelsea
+              rows: [criteriaPool[9], criteriaPool[14], criteriaPool[15]],
+              cols: [criteriaPool[2], criteriaPool[3], criteriaPool[10]]
             },
             {
-              rows: [criteriaPool[5], criteriaPool[8], criteriaPool[16]],  // Fenerbahçe, Benfica, Türkiye
-              cols: [criteriaPool[0], criteriaPool[18], criteriaPool[22]]  // Real Madrid, ŞL Kazandı, Messi Takım Ark.
+              rows: [criteriaPool[5], criteriaPool[8], criteriaPool[16]],
+              cols: [criteriaPool[0], criteriaPool[18], criteriaPool[22]]
             }
           ];
 
@@ -650,10 +657,10 @@
           tttCols.value = [...pick.cols];
           tttGrid.value = [[null, null, null], [null, null, null], [null, null, null]];
           selectedCell.value = null;
-          isMyTurn.value = true;
+          isMyTurn.value = isHost.value;
 
-          if (sync) {
-            sendData('TTT_BOARD', {
+          if (sync && isHost.value) {
+            sendData('SYNC_TTT_BOARD', {
               rows: tttRows.value,
               cols: tttCols.value,
               grid: tttGrid.value,
@@ -672,7 +679,7 @@
         };
 
         const openTttInput = (r, c) => {
-          if (isConnected.value && !isMyTurn.value) {
+          if (!isMyTurn.value) {
             alert("Şu an sıra rakipte!");
             return;
           }
@@ -702,17 +709,13 @@
             myScore.value += 10;
             sendData('UPDATE_SCORE', { score: myScore.value });
 
-            if (isConnected.value) {
-              isMyTurn.value = false;
-              sendData('TTT_MOVE', { r, c, name: found.name });
-            }
+            isMyTurn.value = false;
+            sendData('TTT_MOVE', { r, c, name: found.name });
           } else {
             tttError.value = "Kriterler uyuşmadı! Sıra rakibe geçti.";
             setTimeout(() => {
-              if (isConnected.value) {
-                isMyTurn.value = false;
-                sendData('TTT_FORFEIT', {});
-              }
+              isMyTurn.value = false;
+              sendData('TTT_FORFEIT', {});
               selectedCell.value = null;
               tttError.value = "";
             }, 1200);
@@ -730,6 +733,7 @@
         const pairWins = ref({ me: 0, opp: 0 });
 
         const setPairCategory = (cat) => {
+          if (!isHost.value) return;
           pairCategory.value = cat;
           generateRandomPair(true);
         };
@@ -752,7 +756,7 @@
           pairFeedback.value = { success: false, text: "Süre Doldu! (10sn)" };
           setTimeout(() => {
             pairFlashClass.value = "";
-            if (isHost.value || !isConnected.value) generateRandomPair(true);
+            if (isHost.value) generateRandomPair(true);
           }, 1200);
         };
 
@@ -774,11 +778,10 @@
           pairFlashClass.value = "";
           startPairTimer();
 
-          if (sync) {
+          if (sync && isHost.value) {
             sendData('SYNC_PAIR', {
               pair: randomPair.value,
-              category: pairCategory.value,
-              wins: pairWins.value
+              category: pairCategory.value
             });
           }
         };
@@ -821,8 +824,10 @@
               sendData('PAIR_MATCH_OVER', { winner: myNick.value });
             } else {
               pairFeedback.value = { success: true, text: `Doğru: ${match.name}!` };
-              sendData('PAIR_SOLVED', { name: match.name, by: myNick.value, wins: pairWins.value });
-              setTimeout(() => { generateRandomPair(true); }, 1200);
+              sendData('PAIR_SOLVED', { name: match.name, by: myNick.value });
+              setTimeout(() => { 
+                if (isHost.value) generateRandomPair(true); 
+              }, 1200);
             }
           } else {
             pairFlashClass.value = "wrong-anim";
@@ -862,12 +867,11 @@
           usedPlayersThisRound.value = [];
           suggestions.value = [];
 
-          if (sync) {
-            sendData('SYNC_TARGET', {
+          if (sync && isHost.value) {
+            sendData('SYNC_TARGET_ROUND', {
               challenge: currentChallenge.value,
               goal: targetGoal.value,
-              maxPicks: currentMaxPicks.value,
-              picks: []
+              maxPicks: currentMaxPicks.value
             });
           }
         };
@@ -890,7 +894,6 @@
           targetPicks.value.push(found);
           usedPlayersThisRound.value.push(found.name.toLowerCase());
           
-          sendData('TARGET_ADD', { player: found });
           targetInput.value = "";
           suggestions.value = [];
 
@@ -902,7 +905,7 @@
           }
         };
 
-        // AUTOCOMPLETE (SADECE AD-SOYAD)
+        // AUTOCOMPLETE
         const suggestions = ref([]);
         const onSearchInput = (query) => {
           if (!query || query.trim().length < 2) {
@@ -927,7 +930,9 @@
           }
         };
 
-        // MULTIPLAYER (PEERJS)
+        // ==========================================
+        // P2P REALTIME MULTIPLAYER (PEERJS)
+        // ==========================================
         const peer = ref(null);
         const conn = ref(null);
         const myPeerId = ref("");
@@ -953,13 +958,11 @@
             opponentScore.value = data.payload.score;
           } else if (data.type === 'UPDATE_SCORE') {
             opponentScore.value = data.payload.score;
-          } else if (data.type === 'SYNC_MODE') {
-            activeMode.value = data.payload;
-          } else if (data.type === 'TTT_BOARD') {
+          } else if (data.type === 'SYNC_TTT_BOARD') {
             tttRows.value = data.payload.rows;
             tttCols.value = data.payload.cols;
             tttGrid.value = data.payload.grid;
-            isMyTurn.value = data.payload.nextTurnIsHost ? isHost.value : !isHost.value;
+            isMyTurn.value = false;
           } else if (data.type === 'TTT_MOVE') {
             const { r, c, name } = data.payload;
             tttGrid.value[r][c] = name;
@@ -969,8 +972,6 @@
           } else if (data.type === 'SYNC_PAIR') {
             randomPair.value = data.payload.pair;
             pairCategory.value = data.payload.category;
-            pairWins.value.opp = data.payload.wins.me;
-            pairWins.value.me = data.payload.wins.opp;
             pairFeedback.value = null;
             startPairTimer();
           } else if (data.type === 'PAIR_SOLVED') {
@@ -984,15 +985,13 @@
           } else if (data.type === 'PAIR_MATCH_OVER') {
             clearInterval(timerInterval);
             pairFeedback.value = { success: false, text: `Seriyi ${data.payload.winner} kazandı!` };
-          } else if (data.type === 'SYNC_TARGET') {
+          } else if (data.type === 'SYNC_TARGET_ROUND') {
             currentChallenge.value = data.payload.challenge;
             targetGoal.value = data.payload.goal;
             currentMaxPicks.value = data.payload.maxPicks;
-            targetPicks.value = data.payload.picks;
+            targetPicks.value = [];
+            targetInput.value = "";
             usedPlayersThisRound.value = [];
-          } else if (data.type === 'TARGET_ADD') {
-            targetPicks.value.push(data.payload.player);
-            usedPlayersThisRound.value.push(data.payload.player.name.toLowerCase());
           }
         };
 
@@ -1009,23 +1008,14 @@
             conn.value.on('open', () => {
               isConnected.value = true;
               syncNick();
-              sendData('TTT_BOARD', {
-                rows: tttRows.value,
-                cols: tttCols.value,
-                grid: tttGrid.value,
-                nextTurnIsHost: true
-              });
-              sendData('SYNC_PAIR', {
-                pair: randomPair.value,
-                category: pairCategory.value,
-                wins: pairWins.value
-              });
-              sendData('SYNC_TARGET', {
-                challenge: currentChallenge.value,
-                goal: targetGoal.value,
-                maxPicks: currentMaxPicks.value,
-                picks: targetPicks.value
-              });
+              // Host iki tarafın da göreceği oyunu kurup gönderir
+              if (activeMode.value === 'tictactoe') {
+                generateAdvancedBoard(true);
+              } else if (activeMode.value === 'three_two_one') {
+                generateRandomPair(true);
+              } else if (activeMode.value === 'target') {
+                resetTargetRound(true);
+              }
             });
             conn.value.on('data', handleIncomingData);
           });
@@ -1049,16 +1039,21 @@
           });
         };
 
-        const changeMode = (modeId) => {
-          activeMode.value = modeId;
-          sendData('SYNC_MODE', modeId);
+        const leaveRoom = () => {
+          if (conn.value) conn.value.close();
+          if (peer.value) peer.value.destroy();
+          isConnected.value = false;
+          myPeerId.value = "";
+          roomCode.value = "";
+          joinCodeInput.value = "";
         };
 
-        onMounted(() => {
-          generateAdvancedBoard();
-          generateRandomPair();
-          resetTargetRound();
-        });
+        // Her mod değişiminde yeniden oda kurulur
+        const changeMode = (modeId) => {
+          if (activeMode.value === modeId) return;
+          leaveRoom();
+          activeMode.value = modeId;
+        };
 
         onUnmounted(() => {
           clearInterval(timerInterval);
@@ -1067,6 +1062,7 @@
         return {
           modes,
           activeMode,
+          currentModeTitle,
           changeMode,
           getVisualLogo,
           isNickChosen,
@@ -1090,6 +1086,7 @@
           isMyTurn,
           createRoom,
           joinRoom,
+          leaveRoom,
           tttCols,
           tttRows,
           tttGrid,
