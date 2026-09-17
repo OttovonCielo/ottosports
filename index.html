@@ -23,7 +23,7 @@
 <body class="bg-slate-950 text-slate-100 min-h-screen pb-12 selection:bg-emerald-500 selection:text-black">
   <div id="app" class="max-w-4xl mx-auto px-4 pt-4">
 
-    <!-- 1. AŞAMA: ZORUNLU NİCK BELİRLEME EKRANI -->
+    <!-- BİRİNCİ AŞAMA: ZORUNLU KULLANICI ADI BELİRLEME EKRANI -->
     <div v-if="!isNickChosen" class="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4">
       <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl max-w-sm w-full text-center space-y-4 shadow-2xl shadow-emerald-500/10">
         <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-emerald-400 to-cyan-500 p-0.5 shadow-lg">
@@ -31,7 +31,7 @@
         </div>
         <div>
           <h2 class="text-xl font-black italic tracking-wide text-emerald-400">OTTO SPORTS ARENA</h2>
-          <p class="text-xs text-slate-400 mt-1">1. Adım: Önce Kullanıcı Adını (Nick) Belirle</p>
+          <p class="text-xs text-slate-400 mt-1">Önce Kullanıcı Adını (Nick) Belirle</p>
         </div>
         <div class="space-y-2.5">
           <input 
@@ -44,25 +44,24 @@
             @click="confirmNick" 
             :disabled="!tempNick.trim()"
             class="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black rounded-xl text-xs transition disabled:opacity-40">
-            Devam Et (Oda Kur / Katıl)
+            Devam Et
           </button>
         </div>
       </div>
     </div>
 
-    <!-- 2. AŞAMA: ODA BAĞLANTISI KURULMADAN OYUNU AÇMAYAN LOBİ EKRANI -->
+    <!-- İKİNCİ AŞAMA: ODA EŞLEŞME EKRANI -->
     <div v-if="isNickChosen && !isConnected" class="fixed inset-0 z-40 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4">
       <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl max-w-md w-full text-center space-y-5 shadow-2xl">
         <div>
           <span class="text-[10px] uppercase font-black tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
             Seçilen Mod: {{ currentModeTitle }}
           </span>
-          <h2 class="text-xl font-black text-slate-100 mt-3">2. Adım: Rakip İle Eşleş</h2>
+          <h2 class="text-xl font-black text-slate-100 mt-3">Rakip İle Eşleş</h2>
           <p class="text-xs text-slate-400 mt-1">Hoş geldin <b class="text-emerald-400">{{ myNick }}</b>! Oyuna başlamak için oda kur veya koda katıl.</p>
         </div>
 
         <div class="space-y-4">
-          <!-- Oda Kurma -->
           <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl">
             <div v-if="!myPeerId">
               <button @click="createRoom" class="w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs transition">
@@ -78,7 +77,6 @@
 
           <div class="text-xs font-black text-slate-600">VEYA</div>
 
-          <!-- Odaya Katılma -->
           <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl space-y-2.5">
             <input 
               v-model="joinCodeInput" 
@@ -92,7 +90,7 @@
       </div>
     </div>
 
-    <!-- Üst Bar & Logo -->
+    <!-- Üst Bar ve Logo -->
     <header class="flex flex-col sm:flex-row items-center justify-between border-b border-slate-800 pb-4 mb-4 gap-3">
       <div class="flex items-center gap-3">
         <div class="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600 p-[2px] shadow-lg shadow-emerald-500/20 flex-shrink-0">
@@ -121,13 +119,12 @@
             <h1 class="text-2xl font-black italic tracking-wider bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">
               OTTO SPORTS
             </h1>
-            <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">FC 26 & 2000+</span>
+            <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">FC 26 ve 2000+</span>
           </div>
-          <p class="text-[11px] text-slate-400">9 Büyük Lig & FC İkonlar Veri Tabanı (17.09.2026)</p>
+          <p class="text-[11px] text-slate-400">9 Büyük Lig ve FC İkonlar Veri Tabanı (17.09.2026)</p>
         </div>
       </div>
 
-      <!-- Menü (Mod Değişince Odayı Sıfırlar ve Yeni Oda İster) -->
       <nav class="flex flex-wrap gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
         <button 
           v-for="m in modes" 
@@ -140,7 +137,7 @@
       </nav>
     </header>
 
-    <!-- SCOREBOARD & ODA BİLGİSİ -->
+    <!-- SKOR TABLOSU ve ODA BİLGİSİ -->
     <div v-if="isConnected" class="bg-slate-900 border border-slate-800 rounded-2xl p-3 mb-4 space-y-3">
       <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
         <div class="flex items-center gap-2">
@@ -182,7 +179,7 @@
       </div>
     </div>
 
-    <!-- 1. OYUN: TIC-TAC-TOE -->
+    <!-- TİC-TAC-TOE OYUNU -->
     <section v-if="activeMode === 'tictactoe' && isConnected" class="space-y-4">
       <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 text-center">
         <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
@@ -206,7 +203,6 @@
           </span>
         </div>
 
-        <!-- 4x4 Grid -->
         <div class="inline-grid grid-cols-4 gap-1.5 bg-slate-950 p-2.5 rounded-xl border border-slate-800 max-w-full overflow-x-auto">
           <div class="w-20 h-20 sm:w-24 sm:h-24"></div>
           
@@ -238,7 +234,7 @@
           <p class="text-[11px] text-slate-300 mb-1.5 text-center flex items-center justify-center gap-1.5 flex-wrap">
             <img v-if="getVisualLogo(tttRows[selectedCell.r].label)" :src="getVisualLogo(tttRows[selectedCell.r].label)" class="w-4 h-4 object-contain rounded-sm">
             <b class="text-emerald-400">{{ tttRows[selectedCell.r].label }}</b>
-            <span>&</span>
+            <span>ve</span>
             <img v-if="getVisualLogo(tttCols[selectedCell.c].label)" :src="getVisualLogo(tttCols[selectedCell.c].label)" class="w-4 h-4 object-contain rounded-sm">
             <b class="text-cyan-400">{{ tttCols[selectedCell.c].label }}</b>
           </p>
@@ -268,24 +264,24 @@
       </div>
     </section>
 
-    <!-- 2. OYUN: 3-2-1 KULÜP / ÜLKE -->
+    <!-- ÜÇ - İKİ - BİR ARENASI -->
     <section v-if="activeMode === 'three_two_one' && isConnected" class="space-y-4">
       <div :class="pairFlashClass" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 text-center transition-colors duration-300">
         <div class="flex justify-between items-center mb-3 flex-wrap gap-2">
           <div class="text-left">
-            <h2 class="text-lg font-black text-teal-400">3 - 2 - 1 Arenası (İlk 3 Yapan Kazanır)</h2>
-            <p class="text-[11px] text-slate-400">İki ekranda da aynı eşleşme! 10 saniye içinde ortak futbolcuyu yaz.</p>
+            <h2 class="text-lg font-black text-teal-400">Üç - İki - Bir Arenası (İlk Üç Yapan Kazanır)</h2>
+            <p class="text-[11px] text-slate-400">İki ekranda da aynı eşleşme! On saniye içinde ortak futbolcuyu yaz.</p>
           </div>
 
           <div v-if="isHost" class="flex items-center bg-slate-950 p-1 rounded-lg border border-slate-800 text-[11px]">
             <button 
               @click="setPairCategory('club_club')" 
               :class="pairCategory === 'club_club' ? 'bg-teal-500 text-slate-950 font-black' : 'text-slate-400'"
-              class="px-2.5 py-0.5 rounded-md transition">Takım - Takım</button>
+              class="px-2.5 py-0.5 rounded-md transition">Takım ve Takım</button>
             <button 
               @click="setPairCategory('nation_club')" 
               :class="pairCategory === 'nation_club' ? 'bg-teal-500 text-slate-950 font-black' : 'text-slate-400'"
-              class="px-2.5 py-0.5 rounded-md transition">Ülke - Takım</button>
+              class="px-2.5 py-0.5 rounded-md transition">Ülke ve Takım</button>
           </div>
         </div>
 
@@ -313,7 +309,7 @@
             <div v-else class="text-2xl mb-1">🛡️</div>
             <div class="font-black text-xs text-emerald-400 line-clamp-1">{{ randomPair.t1 }}</div>
           </div>
-          <span class="text-lg font-black text-slate-600">VS</span>
+          <span class="text-lg font-black text-slate-600">KARŞI KARŞIYA</span>
           <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl w-36 text-center flex flex-col items-center">
             <img v-if="getVisualLogo(randomPair.t2)" :src="getVisualLogo(randomPair.t2)" class="w-12 h-12 object-contain mb-1.5 drop-shadow rounded-sm">
             <div v-else class="text-2xl mb-1">🛡️</div>
@@ -340,7 +336,7 @@
 
           <div class="flex justify-center gap-1.5 pt-1">
             <button @click="checkPair(pairInput)" class="bg-teal-500 hover:bg-teal-400 text-slate-950 font-black px-4 py-1.5 rounded-lg text-xs">ONAYLA</button>
-            <button v-if="isHost" @click="generateRandomPair(true)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-3 py-1.5 rounded-lg text-xs">Pas / Yeni Eşleşme</button>
+            <button v-if="isHost" @click="generateRandomPair(true)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-3 py-1.5 rounded-lg text-xs">Pas Geç</button>
           </div>
           <p v-if="pairFeedback" :class="pairFeedback.success ? 'text-emerald-400' : 'text-rose-400'" class="text-xs font-bold mt-1.5 text-center">
             {{ pairFeedback.text }}
@@ -349,7 +345,7 @@
       </div>
     </section>
 
-    <!-- 3. OYUN: HEDEFİ TUTTUR -->
+    <!-- HEDEFİ TUTTUR OYUNU -->
     <section v-if="activeMode === 'target' && isConnected" class="space-y-4">
       <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 text-center">
         <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
@@ -359,7 +355,7 @@
               <span>{{ currentChallenge.title }}</span>
             </div>
             <p class="text-[11px] text-slate-400">
-              İki oyuncu için de ortak hedef: <b class="text-cyan-400">{{ targetGoal }} {{ currentChallenge.unit }}</b> (<b class="text-slate-200">{{ currentMaxPicks }} oyuncu</b>)
+              Ortak hedef: <b class="text-cyan-400">{{ targetGoal }} {{ currentChallenge.unit }}</b> (<b class="text-slate-200">{{ currentMaxPicks }} oyuncu</b>)
             </p>
           </div>
           <button v-if="isHost" @click="resetTargetRound(true)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-[11px] font-bold border border-slate-700">
@@ -447,7 +443,7 @@
       setup() {
         const modes = [
           { id: 'tictactoe', title: 'Tic-Tac-Toe' },
-          { id: 'three_two_one', title: '3-2-1 Arenası' },
+          { id: 'three_two_one', title: 'Üç - İki - Bir' },
           { id: 'target', title: 'Hedefi Tuttur' }
         ];
         const activeMode = ref('tictactoe');
@@ -482,7 +478,7 @@
 
         const usedPlayersThisRound = ref([]);
 
-        // LOGO / BAYRAK HAVUZU
+        // LOGO ve BAYRAK HAVUZU
         const visualLogos = {
           "Real Madrid": "https://upload.wikimedia.org/wikipedia/en/5/56/Real_Madrid_CF.svg",
           "Barcelona": "https://upload.wikimedia.org/wikipedia/en/4/47/FC_Barcelona_%28crest%29.svg",
@@ -590,7 +586,7 @@
           { name: "Lamine Yamal", nat: "İspanya", clubs: ["Barcelona"], teammateWith: ["Robert Lewandowski"], trophiesWon: ["EURO 2024", "La Liga"], finalsLost: [], weight: 66, height: 178, age: 17, assists: 26, yellowCards: 8 }
         ];
 
-        // 1. TIC-TAC-TOE KRİTERLERİ
+        // TİC-TAC-TOE KRİTERLERİ
         const tttCols = ref([]);
         const tttRows = ref([]);
         const tttGrid = ref([[null, null, null], [null, null, null], [null, null, null]]);
@@ -714,7 +710,7 @@
           }
         };
 
-        // 2. 3-2-1
+        // 3-2-1 ARENASI
         const pairCategory = ref("club_club");
         const randomPair = ref({ t1: "", t2: "" });
         const pairInput = ref("");
@@ -828,7 +824,7 @@
           }
         };
 
-        // 3. HEDEFİ TUTTUR
+        // HEDEFİ TUTTUR
         const targetChallenges = [
           { id: "assists", title: "Kariyer Asisti", icon: "🅰️", prop: "assists", unit: "Asist", min: 400, max: 1500 },
           { id: "yellows", title: "Kariyer Sarı Kartı", icon: "🟨", prop: "yellowCards", unit: "Sarı Kart", min: 50, max: 300 },
@@ -897,7 +893,6 @@
           }
         };
 
-        // AUTOCOMPLETE
         const suggestions = ref([]);
         const onSearchInput = (query) => {
           if (!query || query.trim().length < 2) {
@@ -922,9 +917,7 @@
           }
         };
 
-        // ==========================================
-        // P2P REALTIME MULTIPLAYER (PEERJS)
-        // ==========================================
+        // MULTIPLAYER (PEERJS)
         const peer = ref(null);
         const conn = ref(null);
         const myPeerId = ref("");
@@ -944,11 +937,9 @@
           sendData('SYNC_NICK', { nick: myNick.value, score: myScore.value });
         };
 
-        // Gelen verileri işleme
         const handleIncomingData = (data) => {
           if (!data) return;
 
-          // Katılan oyuncu oyunu istediğinde host'un oyunu göndermesi
           if (data.type === 'REQUEST_SYNC' && isHost.value) {
             syncNick();
             if (activeMode.value === 'tictactoe') {
@@ -1028,7 +1019,6 @@
             conn.value.on('open', () => {
               isConnected.value = true;
               syncNick();
-              // Host iki tarafın da göreceği oyunu kurup gönderir
               if (activeMode.value === 'tictactoe') {
                 generateAdvancedBoard(true);
               } else if (activeMode.value === 'three_two_one') {
@@ -1056,11 +1046,9 @@
             connection.on('open', () => {
               isConnected.value = true;
               syncNick();
-              // Katılan oyuncu oyunu anında talep eder
               connection.send({ type: 'REQUEST_SYNC' });
             });
 
-            // Katılan tarafta veri dinleyiciyi anında bağlıyoruz
             connection.on('data', handleIncomingData);
           });
         };
