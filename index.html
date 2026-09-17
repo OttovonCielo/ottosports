@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Otto Sports - Canlı Online Futbol Arenası</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Vue 3 -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <!-- PeerJS: P2P Canlı Multiplayer Kütüphanesi -->
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@800;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    h1, h2, h3 { font-family: 'Cabinet Grotesk', sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen pb-16 selection:bg-emerald-500 selection:text-black">
+  <div id="app" class="max-w-4xl mx-auto px-4 pt-6">
+
+    <!-- Üst Bar & Otto Sports Logo -->
+    <header class="flex flex-col sm:flex-row items-center justify-between border-b border-slate-800 pb-5 mb-6 gap-4">
+      <div class="flex items-center gap-3.5">
+        <div class="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600 p-[2px] shadow-xl shadow-emerald-500/20 flex-shrink-0">
+          <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center p-2">
+            <svg viewBox="0 0 100 100" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="50" cy="50" r="42" stroke="url(#otto-gradient)" stroke-width="8" stroke-linecap="round" stroke-dasharray="190 70"/>
+              <polygon points="50,28 69,42 62,64 38,64 31,42" fill="#10b981"/>
+              <line x1="50" y1="28" x2="50" y2="12" stroke="#34d399" stroke-width="4" stroke-linecap="round"/>
+              <line x1="69" y1="42" x2="84" y2="47" stroke="#34d399" stroke-width="4" stroke-linecap="round"/>
+              <line x1="62" y1="64" x2="72" y2="78" stroke="#06b6d4" stroke-width="4" stroke-linecap="round"/>
+              <line x1="38" y1="64" x2="28" y2="78" stroke="#06b6d4" stroke-width="4" stroke-linecap="round"/>
+              <line x1="31" y1="42" x2="16" y2="47" stroke="#34d399" stroke-width="4" stroke-linecap="round"/>
+              <defs>
+                <linearGradient id="otto-gradient" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#34d399"/>
+                  <stop offset="50%" stop-color="#10b981"/>
+                  <stop offset="100%" stop-color="#06b6d4"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+        </div>
+
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-3xl font-black italic tracking-wider bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">
+              OTTO SPORTS
+            </h1>
+            <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">ONLINE</span>
+          </div>
+          <p class="text-xs text-slate-400">Canlı P2P Multiplayer Futbol Arenası</p>
+        </div>
+      </div>
+
+      <!-- Menü -->
+      <nav class="flex flex-wrap gap-1.5 bg-slate-900 p-1.5 rounded-xl border border-slate-800">
+        <button 
+          v-for="m in modes" 
+          :key="m.id"
+          @click="changeMode(m.id)"
+          :class="activeMode === m.id ? 'bg-emerald-500 text-slate-950 font-black shadow-lg shadow-emerald-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'"
+          class="px-3 py-2 rounded-lg text-xs font-bold transition">
+          {{ m.title }}
+        </button>
+      </nav>
+    </header>
+
+    <!-- CANLI LOBİ PANELİ -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-6">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <span class="relative flex h-3 w-3">
+            <span v-if="isConnected" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span :class="isConnected ? 'bg-emerald-500' : 'bg-rose-500'" class="relative inline-flex rounded-full h-3 w-3"></span>
+          </span>
+          <div class="text-xs">
+            <span class="text-slate-400">Durum: </span>
+            <b :class="isConnected ? 'text-emerald-400' : 'text-slate-300'">
+              {{ isConnected ? (isHost ? 'Rakip Bağlandı (1. Oyuncusun)' : 'Odaya Bağlandın (2. Oyuncusun)') : 'Tek Başına Oynuyorsun' }}
+            </b>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 flex-wrap">
+          <div v-if="!isConnected && !myPeerId">
+            <button @click="createRoom" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">
+              ⚡ Oda Kur (Host Ol)
+            </button>
+          </div>
+
+          <div v-if="myPeerId && !isConnected" class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-700">
+            <span class="text-xs text-slate-400">Oda Kodun:</span>
+            <b class="text-emerald-400 text-sm tracking-wider select-all">{{ roomCode }}</b>
+            <span class="text-[10px] text-slate-500">(Arkadaşına ilet)</span>
+          </div>
+
+          <div v-if="!isConnected && !myPeerId" class="flex items-center gap-1.5">
+            <input 
+              v-model="joinCodeInput" 
+              placeholder="Oda Kodu (Örn: 8492)" 
+              class="w-36 bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-center uppercase outline-none focus:border-cyan-400 font-bold">
+            <button @click="joinRoom" class="px-3 py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black rounded-xl text-xs">
+              Katıl
+            </button>
+          </div>
+
+          <div v-if="isConnected">
+            <span class="text-xs bg-slate-950 border border-slate-700 px-3 py-1.5 rounded-xl text-slate-300">
+              Oda: <b class="text-cyan-400">{{ roomCode }}</b>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1. OYUN: TIC-TAC-TOE (LOGOLU) -->
+    <section v-if="activeMode === 'tictactoe'" class="space-y-6">
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 text-center">
+        <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+          <div class="text-left">
+            <h2 class="text-2xl font-black text-emerald-400">Online Futbol Tic-Tac-Toe</h2>
+            <p class="text-xs text-slate-400">Kesişen armalarda oynamış ortak futbolcuyu bul.</p>
+          </div>
+          <button v-if="isHost || !isConnected" @click="generateRandomBoard(true)" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold border border-slate-700">
+            🔄 Yeni Rastgele Tahta
+          </button>
+        </div>
+
+        <div v-if="isConnected" class="mb-4">
+          <span :class="isMyTurn ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-amber-500/20 text-amber-300 border-amber-500/40'" class="border px-4 py-1.5 rounded-full text-xs font-black inline-block">
+            {{ isMyTurn ? '🎯 Sıra Sende! Bir kare seç ve futbolcu yaz.' : '⏳ Rakibin Hamlesi Bekleniyor...' }}
+          </span>
+        </div>
+
+        <div class="inline-grid grid-cols-4 gap-2 bg-slate-950 p-4 rounded-2xl border border-slate-800 max-w-full overflow-x-auto">
+          <div class="w-20 h-24 sm:w-28 sm:h-28"></div>
+          <div v-for="col in tttCols" :key="col" class="w-20 h-24 sm:w-28 sm:h-28 bg-slate-900 rounded-xl flex flex-col items-center justify-center p-2 text-center border border-slate-800">
+            <img :src="clubLogos[col]" :alt="col" class="w-8 h-8 sm:w-10 sm:h-10 object-contain mb-1.5 drop-shadow">
+            <span class="text-[10px] sm:text-xs font-black text-cyan-400 leading-tight line-clamp-1">{{ col }}</span>
+          </div>
+
+          <template v-for="(row, rIdx) in tttRows" :key="row">
+            <div class="w-20 h-24 sm:w-28 sm:h-28 bg-slate-900 rounded-xl flex flex-col items-center justify-center p-2 text-center border border-slate-800">
+              <img :src="clubLogos[row]" :alt="row" class="w-8 h-8 sm:w-10 sm:h-10 object-contain mb-1.5 drop-shadow">
+              <span class="text-[10px] sm:text-xs font-black text-emerald-400 leading-tight line-clamp-1">{{ row }}</span>
+            </div>
+            <div 
+              v-for="(col, cIdx) in tttCols" 
+              :key="cIdx"
+              @click="openTttInput(rIdx, cIdx)"
+              :class="tttGrid[rIdx][cIdx] ? 'bg-emerald-950/40 border-emerald-500/80 text-emerald-300' : 'bg-slate-900/60 border-slate-800 hover:border-slate-600 cursor-pointer'"
+              class="w-20 h-24 sm:w-28 sm:h-28 rounded-xl border-2 flex flex-col items-center justify-center p-2 text-center transition">
+              <span v-if="tttGrid[rIdx][cIdx]" class="text-xs font-black leading-tight">{{ tttGrid[rIdx][cIdx] }}</span>
+              <span v-else class="text-slate-700 text-2xl font-black">+</span>
+            </div>
+          </template>
+        </div>
+
+        <div v-if="selectedCell" class="mt-6 max-w-md mx-auto bg-slate-950 border border-slate-700 p-4 rounded-2xl">
+          <p class="text-xs text-slate-300 mb-3 flex items-center justify-center gap-2">
+            <img :src="clubLogos[tttRows[selectedCell.r]]" class="w-5 h-5 object-contain">
+            <b class="text-emerald-400">{{ tttRows[selectedCell.r] }}</b>
+            <span>&</span>
+            <img :src="clubLogos[tttCols[selectedCell.c]]" class="w-5 h-5 object-contain">
+            <b class="text-cyan-400">{{ tttCols[selectedCell.c] }}</b>
+          </p>
+          <div class="flex gap-2">
+            <input 
+              v-model="tttInput" 
+              @keyup.enter="submitTttGuess"
+              placeholder="Futbolcu adı..." 
+              class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-400">
+            <button @click="submitTttGuess" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs px-4 py-2 rounded-xl">
+              Onayla
+            </button>
+          </div>
+          <p v-if="tttError" class="text-rose-400 text-xs mt-2 font-semibold">{{ tttError }}</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. OYUN: 3-2-1 ORTAK KULÜP (LOGOLU) -->
+    <section v-if="activeMode === 'three_two_one'" class="space-y-6">
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 text-center">
+        <h2 class="text-2xl font-black text-teal-400 mb-1">Online 3 - 2 - 1 Ortak Kulüp</h2>
+        <p class="text-xs text-slate-400 mb-6">İki kulüpte de oynamış ismi ilk yazan kazanır!</p>
+
+        <div class="flex items-center justify-center gap-4 sm:gap-8 my-6">
+          <div class="bg-slate-950 border border-slate-800 p-5 rounded-2xl w-36 sm:w-44 text-center flex flex-col items-center">
+            <img :src="clubLogos[randomPair.t1]" class="w-16 h-16 object-contain mb-3 drop-shadow">
+            <div class="font-black text-sm text-emerald-400">{{ randomPair.t1 }}</div>
+          </div>
+          <span class="text-2xl font-black text-slate-600">VS</span>
+          <div class="bg-slate-950 border border-slate-800 p-5 rounded-2xl w-36 sm:w-44 text-center flex flex-col items-center">
+            <img :src="clubLogos[randomPair.t2]" class="w-16 h-16 object-contain mb-3 drop-shadow">
+            <div class="font-black text-sm text-cyan-400">{{ randomPair.t2 }}</div>
+          </div>
+        </div>
+
+        <div class="max-w-md mx-auto space-y-3">
+          <input 
+            v-model="pairInput" 
+            @keyup.enter="checkPair" 
+            placeholder="Futbolcu adı..." 
+            class="w-full bg-slate-950 border border-slate-800 focus:border-teal-400 rounded-xl px-4 py-3 text-center font-bold text-sm outline-none">
+          <div class="flex justify-center gap-2">
+            <button @click="checkPair" class="bg-teal-500 hover:bg-teal-400 text-slate-950 font-black px-6 py-2 rounded-xl text-xs">KONTROL ET</button>
+            <button v-if="isHost || !isConnected" @click="generateRandomPair(true)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-4 py-2 rounded-xl text-xs">Yeni Rastgele Maç</button>
+          </div>
+          <p v-if="pairFeedback" :class="pairFeedback.success ? 'text-emerald-400' : 'text-rose-400'" class="text-xs font-bold mt-2">
+            {{ pairFeedback.text }}
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. OYUN: HEDEFİ TUTTUR -->
+    <section v-if="activeMode === 'target'" class="space-y-6">
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 text-center">
+        <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+          <div class="text-left">
+            <div class="inline-flex items-center gap-2 bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-3 py-1 rounded-full text-xs font-bold mb-1">
+              <span>{{ currentChallenge.icon }}</span>
+              <span>{{ currentChallenge.title }}</span>
+            </div>
+            <p class="text-xs text-slate-400">
+              Kural: <b class="text-slate-200">{{ currentMaxPicks }} oyuncu</b> ile ortak hedef: <b class="text-cyan-400">{{ targetGoal }} {{ currentChallenge.unit }}</b>
+            </p>
+          </div>
+          <button v-if="isHost || !isConnected" @click="resetTargetRound(true)" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold border border-slate-700">
+            🎲 Farklı Hedef Çek
+          </button>
+        </div>
+
+        <div class="flex justify-center gap-6 my-6">
+          <div class="bg-slate-950 border border-slate-800 px-6 py-3 rounded-2xl">
+            <div class="text-[10px] uppercase font-bold text-slate-400">Ortak Toplam</div>
+            <div class="text-3xl font-black" :class="targetTotal > targetGoal ? 'text-rose-400' : 'text-emerald-400'">
+              {{ targetTotal }} / {{ targetGoal }}
+            </div>
+          </div>
+          <div class="bg-slate-950 border border-slate-800 px-6 py-3 rounded-2xl">
+            <div class="text-[10px] uppercase font-bold text-slate-400">Kalan Hak</div>
+            <div class="text-3xl font-black text-cyan-400">{{ currentMaxPicks - targetPicks.length }}</div>
+          </div>
+        </div>
+
+        <div v-if="targetPicks.length < currentMaxPicks" class="max-w-md mx-auto flex gap-2 mb-6">
+          <input 
+            v-model="targetInput" 
+            @keyup.enter="addTarget" 
+            placeholder="Oyuncu adı..." 
+            class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm outline-none focus:border-cyan-400">
+          <button @click="addTarget" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black px-4 py-2 rounded-xl text-xs">Ekle</button>
+        </div>
+
+        <div v-else class="mb-6 space-y-3">
+          <p class="font-black text-lg text-emerald-400">Challenge Tamamlandı! Hedefe Fark: {{ Math.abs(targetGoal - targetTotal) }}</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-xl mx-auto">
+          <div v-for="p in targetPicks" :key="p.name" class="flex justify-between items-center bg-slate-950 border border-slate-800 px-4 py-2.5 rounded-xl text-xs">
+            <span class="font-bold">{{ p.name }}</span>
+            <span class="bg-cyan-950 text-cyan-300 border border-cyan-800 font-black px-2 py-0.5 rounded-lg">
+              {{ p[currentChallenge.prop] }} {{ currentChallenge.unit }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    const { createApp, ref, computed, onMounted } = Vue;
+
+    createApp({
+      setup() {
+        const modes = [
+          { id: 'tictactoe', title: 'Online Tic-Tac-Toe' },
+          { id: 'three_two_one', title: 'Online 3-2-1' },
+          { id: 'target', title: 'Hedefi Tuttur' }
+        ];
+        const activeMode = ref('tictactoe');
+
+        // RESMİ KULÜP LOGO HAVUZU
+        const clubLogos = {
+          "Real Madrid": "https://upload.wikimedia.org/wikipedia/en/5/56/Real_Madrid_CF.svg",
+          "Barcelona": "https://upload.wikimedia.org/wikipedia/en/4/47/FC_Barcelona_%28crest%29.svg",
+          "Chelsea": "https://upload.wikimedia.org/wikipedia/en/c/cc/Chelsea_FC.svg",
+          "Manchester United": "https://upload.wikimedia.org/wikipedia/en/7/7a/Manchester_United_FC_crest.svg",
+          "Arsenal": "https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg",
+          "Inter": "https://upload.wikimedia.org/wikipedia/commons/0/05/FC_Internazionale_Milano_2021.svg",
+          "Milan": "https://upload.wikimedia.org/wikipedia/commons/d/d0/Logo_of_AC_Milan.svg",
+          "Juventus": "https://upload.wikimedia.org/wikipedia/commons/1/15/Juventus_FC_2017_logo.svg",
+          "PSG": "https://upload.wikimedia.org/wikipedia/en/a/a7/Paris_Saint-Germain_F.C..svg",
+          "Borussia Dortmund": "https://upload.wikimedia.org/wikipedia/commons/6/67/Borussia_Dortmund_logo.svg",
+          "Galatasaray": "https://upload.wikimedia.org/wikipedia/commons/f/f6/Galatasaray_Sports_Club_Logo.svg",
+          "Fenerbahçe": "https://upload.wikimedia.org/wikipedia/tr/8/86/Fenerbah%C3%A7e_SK.png",
+          "Beşiktaş": "https://upload.wikimedia.org/wikipedia/commons/2/20/Logo_of_Be%C5%9Fikta%C5%9F_JK.svg",
+          "Liverpool": "https://upload.wikimedia.org/wikipedia/en/0/0c/Liverpool_FC.svg",
+          "Manchester City": "https://upload.wikimedia.org/wikipedia/en/e/eb/Manchester_City_FC_badge.svg",
+          "Porto": "https://upload.wikimedia.org/wikipedia/en/f/f1/FC_Porto.svg"
+        };
+
+        // MULTIPLAYER (PEERJS) DURUMLARI
+        const peer = ref(null);
+        const conn = ref(null);
+        const myPeerId = ref("");
+        const roomCode = ref("");
+        const joinCodeInput = ref("");
+        const isConnected = ref(false);
+        const isHost = ref(false);
+        const isMyTurn = ref(true);
+
+        const sendData = (type, payload) => {
+          if (conn.value && isConnected.value) {
+            conn.value.send({ type, payload });
+          }
+        };
+
+        const handleIncomingData = (data) => {
+          if (data.type === 'SYNC_MODE') {
+            activeMode.value = data.payload;
+          } else if (data.type === 'TTT_BOARD') {
+            tttRows.value = data.payload.rows;
+            tttCols.value = data.payload.cols;
+            tttGrid.value = data.payload.grid;
+            isMyTurn.value = data.payload.nextTurnIsHost ? isHost.value : !isHost.value;
+          } else if (data.type === 'TTT_MOVE') {
+            const { r, c, name } = data.payload;
+            tttGrid.value[r][c] = name;
+            isMyTurn.value = true;
+          } else if (data.type === 'SYNC_PAIR') {
+            randomPair.value = data.payload;
+            pairFeedback.value = null;
+          } else if (data.type === 'PAIR_SOLVED') {
+            pairFeedback.value = { success: true, text: `Rakip bildi: ${data.payload.name}!` };
+            setTimeout(() => {
+              if (isHost.value) generateRandomPair(true);
+            }, 1200);
+          } else if (data.type === 'SYNC_TARGET') {
+            currentChallenge.value = data.payload.challenge;
+            targetGoal.value = data.payload.goal;
+            currentMaxPicks.value = data.payload.maxPicks;
+            targetPicks.value = data.payload.picks;
+          } else if (data.type === 'TARGET_ADD') {
+            targetPicks.value.push(data.payload);
+          }
+        };
+
+        const createRoom = () => {
+          const randCode = Math.floor(1000 + Math.random() * 9000).toString();
+          roomCode.value = randCode;
+          isHost.value = true;
+          isMyTurn.value = true;
+
+          peer.value = new Peer('otto-' + randCode);
+          peer.value.on('open', (id) => {
+            myPeerId.value = id;
+          });
+
+          peer.value.on('connection', (c) => {
+            conn.value = c;
+            conn.value.on('open', () => {
+              isConnected.value = true;
+              sendData('TTT_BOARD', {
+                rows: tttRows.value,
+                cols: tttCols.value,
+                grid: tttGrid.value,
+                nextTurnIsHost: true
+              });
+              sendData('SYNC_PAIR', randomPair.value);
+            });
+            conn.value.on('data', handleIncomingData);
+          });
+        };
+
+        const joinRoom = () => {
+          if (!joinCodeInput.value) return;
+          const code = joinCodeInput.value.trim().toUpperCase();
+          roomCode.value = code;
+          isHost.value = false;
+          isMyTurn.value = false;
+
+          peer.value = new Peer();
+          peer.value.on('open', () => {
+            conn.value = peer.value.connect('otto-' + code);
+            conn.value.on('open', () => {
+              isConnected.value = true;
+            });
+            conn.value.on('data', handleIncomingData);
+          });
+        };
+
+        const changeMode = (modeId) => {
+          activeMode.value = modeId;
+          sendData('SYNC_MODE', modeId);
+        };
+
+        // OYUNCU HAVUZU
+        const playersDB = [
+          { name: "Ricardo Quaresma", clubs: ["Beşiktaş", "Barcelona", "Chelsea", "Porto", "Inter"], clCaps: 68, intGoals: 10, redCards: 14 },
+          { name: "Alvaro Morata", clubs: ["Real Madrid", "Chelsea", "Juventus", "Milan"], clCaps: 82, intGoals: 36, redCards: 4 },
+          { name: "Samuel Eto'o", clubs: ["Barcelona", "Inter", "Chelsea", "Real Madrid"], clCaps: 78, intGoals: 56, redCards: 3 },
+          { name: "Emmanuel Adebayor", clubs: ["Arsenal", "Manchester City", "Real Madrid"], clCaps: 44, intGoals: 32, redCards: 4 },
+          { name: "İlkay Gündoğan", clubs: ["Borussia Dortmund", "Manchester City", "Barcelona"], clCaps: 95, intGoals: 19, redCards: 0 },
+          { name: "Nuri Şahin", clubs: ["Borussia Dortmund", "Real Madrid", "Liverpool"], clCaps: 24, intGoals: 2, redCards: 1 },
+          { name: "Arda Turan", clubs: ["Galatasaray", "Barcelona"], clCaps: 38, intGoals: 17, redCards: 4 },
+          { name: "Arda Güler", clubs: ["Fenerbahçe", "Real Madrid"], clCaps: 10, intGoals: 4, redCards: 0 },
+          { name: "Lionel Messi", clubs: ["Barcelona", "PSG"], clCaps: 163, intGoals: 112, redCards: 3 },
+          { name: "Luis Suarez", clubs: ["Liverpool", "Barcelona"], clCaps: 73, intGoals: 69, redCards: 4 },
+          { name: "Edin Dzeko", clubs: ["Manchester City", "Inter", "Fenerbahçe"], clCaps: 75, intGoals: 67, redCards: 3 },
+          { name: "Mauro Icardi", clubs: ["Inter", "PSG", "Galatasaray"], clCaps: 20, intGoals: 1, redCards: 1 },
+          { name: "Zlatan Ibrahimovic", clubs: ["Juventus", "Inter", "Barcelona", "Milan", "PSG", "Manchester United"], clCaps: 124, intGoals: 62, redCards: 15 },
+          { name: "Mesut Özil", clubs: ["Real Madrid", "Arsenal", "Fenerbahçe"], clCaps: 69, intGoals: 23, redCards: 1 },
+          { name: "Burak Yılmaz", clubs: ["Galatasaray", "Beşiktaş", "Fenerbahçe"], clCaps: 40, intGoals: 31, redCards: 6 },
+          { name: "Pepe", clubs: ["Porto", "Real Madrid", "Beşiktaş"], clCaps: 120, intGoals: 8, redCards: 17 },
+          { name: "Felipe Melo", clubs: ["Galatasaray", "Juventus", "Inter"], clCaps: 35, intGoals: 2, redCards: 22 }
+        ];
+
+        // 1. TIC-TAC-TOE
+        const tttCols = ref([]);
+        const tttRows = ref([]);
+        const tttGrid = ref([[null, null, null], [null, null, null], [null, null, null]]);
+        const selectedCell = ref(null);
+        const tttInput = ref("");
+        const tttError = ref("");
+
+        const generateRandomBoard = (sync = false) => {
+          const boardSets = [
+            { rows: ["Inter", "Beşiktaş", "Milan"], cols: ["Barcelona", "Real Madrid", "Chelsea"] },
+            { rows: ["Galatasaray", "Fenerbahçe", "Arsenal"], cols: ["Real Madrid", "Manchester United", "Chelsea"] },
+            { rows: ["Inter", "PSG", "Juventus"], cols: ["Barcelona", "Real Madrid", "Manchester United"] }
+          ];
+          const pick = boardSets[Math.floor(Math.random() * boardSets.length)];
+          tttRows.value = [...pick.rows].sort(() => 0.5 - Math.random());
+          tttCols.value = [...pick.cols].sort(() => 0.5 - Math.random());
+          tttGrid.value = [[null, null, null], [null, null, null], [null, null, null]];
+          selectedCell.value = null;
+          isMyTurn.value = true;
+
+          if (sync) {
+            sendData('TTT_BOARD', {
+              rows: tttRows.value,
+              cols: tttCols.value,
+              grid: tttGrid.value,
+              nextTurnIsHost: true
+            });
+          }
+        };
+
+        const openTttInput = (r, c) => {
+          if (isConnected.value && !isMyTurn.value) {
+            alert("Şu an rakibin sırası! Hamle yapmasını bekle.");
+            return;
+          }
+          if (tttGrid.value[r][c]) return;
+          selectedCell.value = { r, c };
+          tttInput.value = "";
+          tttError.value = "";
+        };
+
+        const submitTttGuess = () => {
+          if (!tttInput.value || !selectedCell.value) return;
+          const club1 = tttRows.value[selectedCell.value.r];
+          const club2 = tttCols.value[selectedCell.value.c];
+          const val = tttInput.value.trim().toLowerCase();
+
+          const found = playersDB.find(p => 
+            p.name.toLowerCase().includes(val) &&
+            p.clubs.includes(club1) &&
+            p.clubs.includes(club2)
+          );
+
+          if (found) {
+            const r = selectedCell.value.r;
+            const c = selectedCell.value.c;
+            tttGrid.value[r][c] = found.name;
+            selectedCell.value = null;
+
+            if (isConnected.value) {
+              isMyTurn.value = false;
+              sendData('TTT_MOVE', { r, c, name: found.name });
+            }
+          } else {
+            tttError.value = "Bu isim iki kulüpte de oynamamış!";
+          }
+        };
+
+        // 2. 3-2-1
+        const randomPair = ref({ t1: "", t2: "" });
+        const pairInput = ref("");
+        const pairFeedback = ref(null);
+
+        const generateRandomPair = (sync = false) => {
+          const multiClubPlayers = playersDB.filter(p => p.clubs.length >= 2);
+          const randPlayer = multiClubPlayers[Math.floor(Math.random() * multiClubPlayers.length)];
+          const shuffledClubs = [...randPlayer.clubs].sort(() => 0.5 - Math.random());
+          randomPair.value = { t1: shuffledClubs[0], t2: shuffledClubs[1] };
+          pairInput.value = "";
+          pairFeedback.value = null;
+
+          if (sync) sendData('SYNC_PAIR', randomPair.value);
+        };
+
+        const checkPair = () => {
+          const val = pairInput.value.trim().toLowerCase();
+          const match = playersDB.find(p => 
+            p.name.toLowerCase().includes(val) &&
+            p.clubs.includes(randomPair.value.t1) &&
+            p.clubs.includes(randomPair.value.t2)
+          );
+
+          if (match) {
+            pairFeedback.value = { success: true, text: `Bildin: ${match.name}!` };
+            sendData('PAIR_SOLVED', { name: match.name });
+            setTimeout(() => {
+              generateRandomPair(true);
+            }, 1200);
+          } else {
+            pairFeedback.value = { success: false, text: "Eşleşme bulunamadı!" };
+          }
+        };
+
+        // 3. HEDEFİ TUTTUR
+        const challenges = [
+          { id: "ucl", title: "Şampiyonlar Ligi Maçı", icon: "🏆", prop: "clCaps", unit: "Maç", goals: [60, 80, 100, 120] },
+          { id: "international", title: "Milli Takım Golü", icon: "🎯", prop: "intGoals", unit: "Gol", goals: [50, 75, 100] },
+          { id: "red_cards", title: "Kırmızı Kart", icon: "🟥", prop: "redCards", unit: "Kart", goals: [15, 25, 35] }
+        ];
+
+        const currentChallenge = ref(challenges[0]);
+        const targetGoal = ref(100);
+        const currentMaxPicks = ref(5);
+        const targetPicks = ref([]);
+        const targetInput = ref("");
+        const targetTotal = computed(() => {
+          const prop = currentChallenge.value.prop;
+          return targetPicks.value.reduce((s, p) => s + (p[prop] || 0), 0);
+        });
+
+        const resetTargetRound = (sync = false) => {
+          const randChallenge = challenges[Math.floor(Math.random() * challenges.length)];
+          currentChallenge.value = randChallenge;
+          targetGoal.value = randChallenge.goals[Math.floor(Math.random() * randChallenge.goals.length)];
+          currentMaxPicks.value = 5;
+          targetPicks.value = [];
+          targetInput.value = "";
+
+          if (sync) {
+            sendData('SYNC_TARGET', {
+              challenge: currentChallenge.value,
+              goal: targetGoal.value,
+              maxPicks: currentMaxPicks.value,
+              picks: []
+            });
+          }
+        };
+
+        const addTarget = () => {
+          const val = targetInput.value.trim().toLowerCase();
+          const found = playersDB.find(p => p.name.toLowerCase().includes(val));
+          if (!found) {
+            alert("Oyuncu bulunamadı!");
+            return;
+          }
+          if (targetPicks.value.some(p => p.name === found.name)) {
+            alert("Bu oyuncuyu zaten ekledin!");
+            return;
+          }
+          targetPicks.value.push(found);
+          sendData('TARGET_ADD', found);
+          targetInput.value = "";
+        };
+
+        onMounted(() => {
+          generateRandomBoard();
+          generateRandomPair();
+          resetTargetRound();
+        });
+
+        return {
+          modes,
+          activeMode,
+          changeMode,
+          clubLogos,
+          // Multiplayer
+          myPeerId,
+          roomCode,
+          joinCodeInput,
+          isConnected,
+          isHost,
+          isMyTurn,
+          createRoom,
+          joinRoom,
+          // Tic-Tac-Toe
+          tttCols, tttRows, tttGrid, selectedCell, tttInput, tttError, openTttInput, submitTttGuess, generateRandomBoard,
+          // 3-2-1
+          randomPair, pairInput, pairFeedback, checkPair, generateRandomPair,
+          // Hedef
+          currentChallenge, targetGoal, currentMaxPicks, targetPicks, targetInput, targetTotal, addTarget, resetTargetRound
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
