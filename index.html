@@ -11,7 +11,7 @@
   <style>
     html, body { 
       font-family: 'Inter', sans-serif;
-      zoom: 0.9; /* Sitenin tüm öğelerini ve boyunu tam %10 küçültür */
+      zoom: 0.9;
     }
     h1, h2, h3 { font-family: 'Cabinet Grotesk', sans-serif; }
     .correct-anim { animation: flashGreen 0.6s ease; }
@@ -165,7 +165,7 @@
       </div>
     </div>
 
-    <!-- 1. OYUN: TIC-TAC-TOE (LOGOLU & KOMPAKT) -->
+    <!-- 1. OYUN: TIC-TAC-TOE (KULÜP, TURNUVA & BAYRAK LOGOLU) -->
     <section v-if="activeMode === 'tictactoe'" class="space-y-4">
       <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 text-center">
         <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
@@ -189,20 +189,22 @@
           </span>
         </div>
 
-        <!-- 4x4 Grid - Küçültülmüş Kare Boyutları ve Kulüp Logoları -->
+        <!-- 4x4 Grid - Başlıklarda Kulüp Logosu, Turnuva Logosu veya Ülke Bayrağı -->
         <div class="inline-grid grid-cols-4 gap-1.5 bg-slate-950 p-2.5 rounded-xl border border-slate-800 max-w-full overflow-x-auto">
           <div class="w-20 h-20 sm:w-24 sm:h-24"></div>
           
           <!-- Sütun Başlıkları -->
           <div v-for="col in tttCols" :key="col.id" class="w-20 h-20 sm:w-24 sm:h-24 bg-slate-900 rounded-xl flex flex-col items-center justify-center p-1.5 text-center border border-slate-800">
-            <img v-if="clubLogos[col.label]" :src="clubLogos[col.label]" class="w-7 h-7 sm:w-8 sm:h-8 object-contain mb-1 drop-shadow">
+            <img v-if="getVisualLogo(col.label)" :src="getVisualLogo(col.label)" class="w-7 h-7 sm:w-8 sm:h-8 object-contain mb-1 drop-shadow rounded-sm">
+            <span v-else class="text-xl mb-1">🤝</span>
             <span class="text-[9px] sm:text-[10px] font-black text-cyan-400 leading-tight line-clamp-2">{{ col.label }}</span>
           </div>
 
-          <!-- Satırlar ve Hücreler -->
+          <!-- Satır Başlıkları ve Hücreler -->
           <template v-for="(row, rIdx) in tttRows" :key="row.id">
             <div class="w-20 h-20 sm:w-24 sm:h-24 bg-slate-900 rounded-xl flex flex-col items-center justify-center p-1.5 text-center border border-slate-800">
-              <img v-if="clubLogos[row.label]" :src="clubLogos[row.label]" class="w-7 h-7 sm:w-8 sm:h-8 object-contain mb-1 drop-shadow">
+              <img v-if="getVisualLogo(row.label)" :src="getVisualLogo(row.label)" class="w-7 h-7 sm:w-8 sm:h-8 object-contain mb-1 drop-shadow rounded-sm">
+              <span v-else class="text-xl mb-1">🤝</span>
               <span class="text-[9px] sm:text-[10px] font-black text-emerald-400 leading-tight line-clamp-2">{{ row.label }}</span>
             </div>
             <div 
@@ -219,10 +221,10 @@
 
         <div v-if="selectedCell" class="mt-4 max-w-sm mx-auto bg-slate-950 border border-slate-700 p-3 rounded-xl relative text-left">
           <p class="text-[11px] text-slate-300 mb-1.5 text-center flex items-center justify-center gap-1.5 flex-wrap">
-            <img v-if="clubLogos[tttRows[selectedCell.r].label]" :src="clubLogos[tttRows[selectedCell.r].label]" class="w-4 h-4 object-contain">
+            <img v-if="getVisualLogo(tttRows[selectedCell.r].label)" :src="getVisualLogo(tttRows[selectedCell.r].label)" class="w-4 h-4 object-contain rounded-sm">
             <b class="text-emerald-400">{{ tttRows[selectedCell.r].label }}</b>
             <span>&</span>
-            <img v-if="clubLogos[tttCols[selectedCell.c].label]" :src="clubLogos[tttCols[selectedCell.c].label]" class="w-4 h-4 object-contain">
+            <img v-if="getVisualLogo(tttCols[selectedCell.c].label)" :src="getVisualLogo(tttCols[selectedCell.c].label)" class="w-4 h-4 object-contain rounded-sm">
             <b class="text-cyan-400">{{ tttCols[selectedCell.c].label }}</b>
           </p>
           <div class="flex gap-1.5">
@@ -251,7 +253,7 @@
       </div>
     </section>
 
-    <!-- 2. OYUN: 3-2-1 KULÜP (LOGOLU & KOMPAKT) -->
+    <!-- 2. OYUN: 3-2-1 KULÜP / ÜLKE -->
     <section v-if="activeMode === 'three_two_one'" class="space-y-4">
       <div :class="pairFlashClass" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 text-center transition-colors duration-300">
         <div class="flex justify-between items-center mb-3 flex-wrap gap-2">
@@ -290,16 +292,16 @@
           </div>
         </div>
 
-        <!-- Takım Logolu VS Alanı -->
+        <!-- Takım Logolu / Ülke Bayraklı VS Alanı -->
         <div class="flex items-center justify-center gap-3 sm:gap-6 my-4">
           <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl w-36 text-center flex flex-col items-center">
-            <img v-if="clubLogos[randomPair.t1]" :src="clubLogos[randomPair.t1]" class="w-12 h-12 object-contain mb-1.5 drop-shadow">
-            <div v-else class="text-2xl mb-1">{{ pairCategory === 'nation_club' ? '🌍' : '🛡️' }}</div>
+            <img v-if="getVisualLogo(randomPair.t1)" :src="getVisualLogo(randomPair.t1)" class="w-12 h-12 object-contain mb-1.5 drop-shadow rounded-sm">
+            <div v-else class="text-2xl mb-1">🛡️</div>
             <div class="font-black text-xs text-emerald-400 line-clamp-1">{{ randomPair.t1 }}</div>
           </div>
           <span class="text-lg font-black text-slate-600">VS</span>
           <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl w-36 text-center flex flex-col items-center">
-            <img v-if="clubLogos[randomPair.t2]" :src="clubLogos[randomPair.t2]" class="w-12 h-12 object-contain mb-1.5 drop-shadow">
+            <img v-if="getVisualLogo(randomPair.t2)" :src="getVisualLogo(randomPair.t2)" class="w-12 h-12 object-contain mb-1.5 drop-shadow rounded-sm">
             <div v-else class="text-2xl mb-1">🛡️</div>
             <div class="font-black text-xs text-cyan-400 line-clamp-1">{{ randomPair.t2 }}</div>
           </div>
@@ -462,10 +464,11 @@
 
         const usedPlayersThisRound = ref([]);
 
-        // ==========================================
-        // GÜNCEL KULÜP LOGOLARI HAVUZU (SVG/PNG)
-        // ==========================================
-        const clubLogos = {
+        // =========================================================================
+        // GÜNCEL KULÜP, TURNUVA & ÜLKE BAYRAKLARI LOGO VERİ TABANI
+        // =========================================================================
+        const visualLogos = {
+          // Kulüpler
           "Real Madrid": "https://upload.wikimedia.org/wikipedia/en/5/56/Real_Madrid_CF.svg",
           "Barcelona": "https://upload.wikimedia.org/wikipedia/en/4/47/FC_Barcelona_%28crest%29.svg",
           "Inter": "https://upload.wikimedia.org/wikipedia/commons/0/05/FC_Internazionale_Milano_2021.svg",
@@ -487,7 +490,40 @@
           "Bayern Münih": "https://upload.wikimedia.org/wikipedia/commons/1/1b/FC_Bayern_M%C3%BCnchen_logo_%282017%29.svg",
           "Juventus": "https://upload.wikimedia.org/wikipedia/commons/1/15/Juventus_FC_2017_logo.svg",
           "Arsenal": "https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg",
-          "Borussia Dortmund": "https://upload.wikimedia.org/wikipedia/commons/6/67/Borussia_Dortmund_logo.svg"
+          "Borussia Dortmund": "https://upload.wikimedia.org/wikipedia/commons/6/67/Borussia_Dortmund_logo.svg",
+
+          // Turnuva Logoları (Şampiyonlar Ligi, Dünya Kupası vb.)
+          "🏆 ŞL Kazandı": "https://upload.wikimedia.org/wikipedia/en/b/bf/UEFA_Champions_League_logo_2.svg",
+          "💔 ŞL Finalisti": "https://upload.wikimedia.org/wikipedia/en/b/bf/UEFA_Champions_League_logo_2.svg",
+          "⭐ Dünya Kupası": "https://upload.wikimedia.org/wikipedia/commons/e/ec/FIFA_World_Cup_Trophy.svg",
+
+          // Ülke Bayrakları
+          "🇹🇷 Türkiye": "https://upload.wikimedia.org/wikipedia/commons/b/b4/Flag_of_Turkey.svg",
+          "Türkiye": "https://upload.wikimedia.org/wikipedia/commons/b/b4/Flag_of_Turkey.svg",
+          "🇦🇷 Arjantin": "https://upload.wikimedia.org/wikipedia/commons/1/1a/Flag_of_Argentina.svg",
+          "Arjantin": "https://upload.wikimedia.org/wikipedia/commons/1/1a/Flag_of_Argentina.svg",
+          "🇵🇹 Portekiz": "https://upload.wikimedia.org/wikipedia/commons/5/5c/Flag_of_Portugal.svg",
+          "Portekiz": "https://upload.wikimedia.org/wikipedia/commons/5/5c/Flag_of_Portugal.svg",
+          "🇧🇷 Brezilya": "https://upload.wikimedia.org/wikipedia/commons/0/05/Flag_of_Brazil.svg",
+          "Brezilya": "https://upload.wikimedia.org/wikipedia/commons/0/05/Flag_of_Brazil.svg",
+          "🇳🇱 Hollanda": "https://upload.wikimedia.org/wikipedia/commons/2/20/Flag_of_the_Netherlands.svg",
+          "Hollanda": "https://upload.wikimedia.org/wikipedia/commons/2/20/Flag_of_the_Netherlands.svg",
+          "🇧🇪 Belçika": "https://upload.wikimedia.org/wikipedia/commons/6/65/Flag_of_Belgium.svg",
+          "Belçika": "https://upload.wikimedia.org/wikipedia/commons/6/65/Flag_of_Belgium.svg",
+          "🇫🇷 Fransa": "https://upload.wikimedia.org/wikipedia/commons/c/c3/Flag_of_France.svg",
+          "Fransa": "https://upload.wikimedia.org/wikipedia/commons/c/c3/Flag_of_France.svg",
+          "🇩🇪 Almanya": "https://upload.wikimedia.org/wikipedia/commons/b/ba/Flag_of_Germany.svg",
+          "Almanya": "https://upload.wikimedia.org/wikipedia/commons/b/ba/Flag_of_Germany.svg",
+          "🇮🇹 İtalya": "https://upload.wikimedia.org/wikipedia/commons/0/03/Flag_of_Italy.svg",
+          "İtalya": "https://upload.wikimedia.org/wikipedia/commons/0/03/Flag_of_Italy.svg",
+          "🏴󠁧󠁢󠁥󠁮󠁧󠁿 İngiltere": "https://upload.wikimedia.org/wikipedia/en/b/be/Flag_of_England.svg",
+          "İngiltere": "https://upload.wikimedia.org/wikipedia/en/b/be/Flag_of_England.svg",
+          "🇪🇸 İspanya": "https://upload.wikimedia.org/wikipedia/commons/9/9a/Flag_of_Spain.svg",
+          "İspanya": "https://upload.wikimedia.org/wikipedia/commons/9/9a/Flag_of_Spain.svg"
+        };
+
+        const getVisualLogo = (label) => {
+          return visualLogos[label] || null;
         };
 
         // =========================================================================
@@ -1032,7 +1068,7 @@
           modes,
           activeMode,
           changeMode,
-          clubLogos,
+          getVisualLogo,
           isNickChosen,
           tempNick,
           confirmNick,
