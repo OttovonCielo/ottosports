@@ -3,12 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Otto Sports - Canlı Online Futbol Arenası</title>
-  <!-- Tailwind CSS -->
+  <title>Otto Sports - Canlı Futbol Arenası</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Vue 3 -->
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
-  <!-- PeerJS: P2P Canlı Multiplayer Kütüphanesi -->
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@800;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
@@ -19,7 +16,7 @@
 <body class="bg-slate-950 text-slate-100 min-h-screen pb-16 selection:bg-emerald-500 selection:text-black">
   <div id="app" class="max-w-4xl mx-auto px-4 pt-6">
 
-    <!-- Üst Bar & Otto Sports Logo -->
+    <!-- Üst Bar & Logo -->
     <header class="flex flex-col sm:flex-row items-center justify-between border-b border-slate-800 pb-5 mb-6 gap-4">
       <div class="flex items-center gap-3.5">
         <div class="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600 p-[2px] shadow-xl shadow-emerald-500/20 flex-shrink-0">
@@ -48,9 +45,9 @@
             <h1 class="text-3xl font-black italic tracking-wider bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">
               OTTO SPORTS
             </h1>
-            <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">ONLINE</span>
+            <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">ARENA</span>
           </div>
-          <p class="text-xs text-slate-400">Canlı P2P Multiplayer Futbol Arenası</p>
+          <p class="text-xs text-slate-400">Canlı P2P Multiplayer & Canlı Skor Sistemi</p>
         </div>
       </div>
 
@@ -67,83 +64,108 @@
       </nav>
     </header>
 
-    <!-- CANLI LOBİ PANELİ -->
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-6">
+    <!-- CANLI LOBİ & CANLI SCOREBOARD -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-6 space-y-4">
       <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <!-- Nick & Lobi Durumu -->
         <div class="flex items-center gap-3">
           <span class="relative flex h-3 w-3">
             <span v-if="isConnected" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span :class="isConnected ? 'bg-emerald-500' : 'bg-rose-500'" class="relative inline-flex rounded-full h-3 w-3"></span>
           </span>
-          <div class="text-xs">
-            <span class="text-slate-400">Durum: </span>
-            <b :class="isConnected ? 'text-emerald-400' : 'text-slate-300'">
-              {{ isConnected ? (isHost ? 'Rakip Bağlandı (1. Oyuncusun)' : 'Odaya Bağlandın (2. Oyuncusun)') : 'Tek Başına Oynuyorsun' }}
-            </b>
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-slate-400">Nick:</span>
+            <input 
+              v-model="myNick" 
+              @change="syncNick"
+              class="bg-slate-950 border border-slate-700 text-xs px-2.5 py-1 rounded-lg text-emerald-400 font-black w-28 text-center outline-none">
           </div>
         </div>
 
+        <!-- Oda Kur / Katıl Kontrolleri -->
         <div class="flex items-center gap-2 flex-wrap">
           <div v-if="!isConnected && !myPeerId">
-            <button @click="createRoom" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">
-              ⚡ Oda Kur (Host Ol)
+            <button @click="createRoom" class="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">
+              ⚡ Oda Kur (Host)
             </button>
           </div>
 
           <div v-if="myPeerId && !isConnected" class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-700">
-            <span class="text-xs text-slate-400">Oda Kodun:</span>
-            <b class="text-emerald-400 text-sm tracking-wider select-all">{{ roomCode }}</b>
-            <span class="text-[10px] text-slate-500">(Arkadaşına ilet)</span>
+            <span class="text-xs text-slate-400">Oda Kodu:</span>
+            <b class="text-emerald-400 text-sm tracking-wider">{{ roomCode }}</b>
           </div>
 
           <div v-if="!isConnected && !myPeerId" class="flex items-center gap-1.5">
             <input 
               v-model="joinCodeInput" 
-              placeholder="Oda Kodu (Örn: 8492)" 
-              class="w-36 bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-center uppercase outline-none focus:border-cyan-400 font-bold">
-            <button @click="joinRoom" class="px-3 py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black rounded-xl text-xs">
+              placeholder="Oda Kodu" 
+              class="w-24 bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-center uppercase outline-none focus:border-cyan-400 font-bold">
+            <button @click="joinRoom" class="px-3 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black rounded-xl text-xs">
               Katıl
             </button>
           </div>
 
-          <div v-if="isConnected">
-            <span class="text-xs bg-slate-950 border border-slate-700 px-3 py-1.5 rounded-xl text-slate-300">
-              Oda: <b class="text-cyan-400">{{ roomCode }}</b>
-            </span>
+          <div v-if="isConnected" class="text-xs bg-slate-950 border border-slate-700 px-3 py-1.5 rounded-xl text-slate-300">
+            Oda: <b class="text-cyan-400">{{ roomCode }}</b>
+          </div>
+        </div>
+      </div>
+
+      <!-- CANLI SCOREBOARD (SKOR TABLOSU) -->
+      <div class="bg-slate-950 border border-slate-800/80 rounded-xl p-3 flex justify-around items-center">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 font-black flex items-center justify-center text-xs border border-emerald-500/30">
+            {{ myNick.charAt(0).toUpperCase() }}
+          </div>
+          <div>
+            <div class="text-[11px] font-bold text-slate-300">{{ myNick }} (Sen)</div>
+            <div class="text-lg font-black text-emerald-400 leading-none">{{ myScore }} <span class="text-[10px] font-normal text-slate-500">Puan</span></div>
+          </div>
+        </div>
+
+        <div class="text-xs font-black text-slate-600">VS</div>
+
+        <div class="flex items-center gap-2.5">
+          <div>
+            <div class="text-[11px] font-bold text-slate-300 text-right">{{ opponentNick }}</div>
+            <div class="text-lg font-black text-cyan-400 leading-none text-right">{{ opponentScore }} <span class="text-[10px] font-normal text-slate-500">Puan</span></div>
+          </div>
+          <div class="w-8 h-8 rounded-full bg-cyan-500/20 text-cyan-400 font-black flex items-center justify-center text-xs border border-cyan-500/30">
+            {{ opponentNick.charAt(0).toUpperCase() }}
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 1. OYUN: TIC-TAC-TOE (LOGOLU) -->
+    <!-- 1. OYUN: TIC-TAC-TOE -->
     <section v-if="activeMode === 'tictactoe'" class="space-y-6">
       <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 text-center">
         <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
           <div class="text-left">
             <h2 class="text-2xl font-black text-emerald-400">Online Futbol Tic-Tac-Toe</h2>
-            <p class="text-xs text-slate-400">Kesişen armalarda oynamış ortak futbolcuyu bul.</p>
+            <p class="text-xs text-slate-400">Doğru kare tahmini: <b>+10 Puan</b></p>
           </div>
           <button v-if="isHost || !isConnected" @click="generateRandomBoard(true)" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold border border-slate-700">
-            🔄 Yeni Rastgele Tahta
+            🔄 Yeni Tahta
           </button>
         </div>
 
         <div v-if="isConnected" class="mb-4">
           <span :class="isMyTurn ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-amber-500/20 text-amber-300 border-amber-500/40'" class="border px-4 py-1.5 rounded-full text-xs font-black inline-block">
-            {{ isMyTurn ? '🎯 Sıra Sende! Bir kare seç ve futbolcu yaz.' : '⏳ Rakibin Hamlesi Bekleniyor...' }}
+            {{ isMyTurn ? '🎯 Sıra Sende!' : '⏳ Rakip Oynuyor...' }}
           </span>
         </div>
 
         <div class="inline-grid grid-cols-4 gap-2 bg-slate-950 p-4 rounded-2xl border border-slate-800 max-w-full overflow-x-auto">
           <div class="w-20 h-24 sm:w-28 sm:h-28"></div>
           <div v-for="col in tttCols" :key="col" class="w-20 h-24 sm:w-28 sm:h-28 bg-slate-900 rounded-xl flex flex-col items-center justify-center p-2 text-center border border-slate-800">
-            <img :src="clubLogos[col]" :alt="col" class="w-8 h-8 sm:w-10 sm:h-10 object-contain mb-1.5 drop-shadow">
+            <img :src="clubLogos[col]" class="w-8 h-8 sm:w-10 sm:h-10 object-contain mb-1.5 drop-shadow">
             <span class="text-[10px] sm:text-xs font-black text-cyan-400 leading-tight line-clamp-1">{{ col }}</span>
           </div>
 
           <template v-for="(row, rIdx) in tttRows" :key="row">
             <div class="w-20 h-24 sm:w-28 sm:h-28 bg-slate-900 rounded-xl flex flex-col items-center justify-center p-2 text-center border border-slate-800">
-              <img :src="clubLogos[row]" :alt="row" class="w-8 h-8 sm:w-10 sm:h-10 object-contain mb-1.5 drop-shadow">
+              <img :src="clubLogos[row]" class="w-8 h-8 sm:w-10 sm:h-10 object-contain mb-1.5 drop-shadow">
               <span class="text-[10px] sm:text-xs font-black text-emerald-400 leading-tight line-clamp-1">{{ row }}</span>
             </div>
             <div 
@@ -158,34 +180,44 @@
           </template>
         </div>
 
-        <div v-if="selectedCell" class="mt-6 max-w-md mx-auto bg-slate-950 border border-slate-700 p-4 rounded-2xl">
-          <p class="text-xs text-slate-300 mb-3 flex items-center justify-center gap-2">
-            <img :src="clubLogos[tttRows[selectedCell.r]]" class="w-5 h-5 object-contain">
-            <b class="text-emerald-400">{{ tttRows[selectedCell.r] }}</b>
-            <span>&</span>
-            <img :src="clubLogos[tttCols[selectedCell.c]]" class="w-5 h-5 object-contain">
-            <b class="text-cyan-400">{{ tttCols[selectedCell.c] }}</b>
+        <!-- Otomatik Tamamlamalı Arama Alanı -->
+        <div v-if="selectedCell" class="mt-6 max-w-md mx-auto bg-slate-950 border border-slate-700 p-4 rounded-2xl relative text-left">
+          <p class="text-xs text-slate-300 mb-2 text-center">
+            <b class="text-emerald-400">{{ tttRows[selectedCell.r] }}</b> ve <b class="text-cyan-400">{{ tttCols[selectedCell.c] }}</b> ortak oyuncusu:
           </p>
-          <div class="flex gap-2">
+          <div class="flex gap-2 relative">
             <input 
               v-model="tttInput" 
-              @keyup.enter="submitTttGuess"
-              placeholder="Futbolcu adı..." 
+              @input="onSearchInput(tttInput)"
+              placeholder="Oyuncu adı yazmaya başla..." 
               class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-400">
-            <button @click="submitTttGuess" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs px-4 py-2 rounded-xl">
+            <button @click="submitTttGuess(tttInput)" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs px-4 py-2 rounded-xl">
               Onayla
             </button>
           </div>
-          <p v-if="tttError" class="text-rose-400 text-xs mt-2 font-semibold">{{ tttError }}</p>
+
+          <!-- Açılır Öneri Listesi -->
+          <ul v-if="suggestions.length" class="absolute z-20 left-4 right-4 bg-slate-900 border border-slate-700 rounded-xl mt-1 max-h-40 overflow-y-auto shadow-2xl">
+            <li 
+              v-for="p in suggestions" 
+              :key="p.name" 
+              @click="selectSuggestion(p.name, 'ttt')"
+              class="px-3 py-2 text-xs hover:bg-slate-800 cursor-pointer flex justify-between items-center border-b border-slate-800/50">
+              <span class="font-bold text-slate-200">{{ p.name }}</span>
+              <span class="text-[10px] text-slate-500">{{ p.clubs.slice(0, 3).join(', ') }}</span>
+            </li>
+          </ul>
+
+          <p v-if="tttError" class="text-rose-400 text-xs mt-2 font-semibold text-center">{{ tttError }}</p>
         </div>
       </div>
     </section>
 
-    <!-- 2. OYUN: 3-2-1 ORTAK KULÜP (LOGOLU) -->
+    <!-- 2. OYUN: 3-2-1 ORTAK KULÜP -->
     <section v-if="activeMode === 'three_two_one'" class="space-y-6">
       <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 text-center">
         <h2 class="text-2xl font-black text-teal-400 mb-1">Online 3 - 2 - 1 Ortak Kulüp</h2>
-        <p class="text-xs text-slate-400 mb-6">İki kulüpte de oynamış ismi ilk yazan kazanır!</p>
+        <p class="text-xs text-slate-400 mb-6">İlk doğru bilen kapar: <b>+15 Puan</b> (Aynı oyuncu tekrar kullanılamaz!)</p>
 
         <div class="flex items-center justify-center gap-4 sm:gap-8 my-6">
           <div class="bg-slate-950 border border-slate-800 p-5 rounded-2xl w-36 sm:w-44 text-center flex flex-col items-center">
@@ -199,17 +231,30 @@
           </div>
         </div>
 
-        <div class="max-w-md mx-auto space-y-3">
+        <div class="max-w-md mx-auto space-y-3 relative text-left">
           <input 
             v-model="pairInput" 
-            @keyup.enter="checkPair" 
-            placeholder="Futbolcu adı..." 
+            @input="onSearchInput(pairInput)"
+            placeholder="Futbolcu adı yazmaya başla..." 
             class="w-full bg-slate-950 border border-slate-800 focus:border-teal-400 rounded-xl px-4 py-3 text-center font-bold text-sm outline-none">
-          <div class="flex justify-center gap-2">
-            <button @click="checkPair" class="bg-teal-500 hover:bg-teal-400 text-slate-950 font-black px-6 py-2 rounded-xl text-xs">KONTROL ET</button>
-            <button v-if="isHost || !isConnected" @click="generateRandomPair(true)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-4 py-2 rounded-xl text-xs">Yeni Rastgele Maç</button>
+
+          <!-- Açılır Öneri Listesi -->
+          <ul v-if="suggestions.length" class="absolute z-20 left-0 right-0 bg-slate-900 border border-slate-700 rounded-xl mt-1 max-h-40 overflow-y-auto shadow-2xl">
+            <li 
+              v-for="p in suggestions" 
+              :key="p.name" 
+              @click="selectSuggestion(p.name, 'pair')"
+              class="px-3 py-2 text-xs hover:bg-slate-800 cursor-pointer flex justify-between items-center border-b border-slate-800/50">
+              <span class="font-bold text-slate-200">{{ p.name }}</span>
+              <span class="text-[10px] text-slate-500">{{ p.clubs.slice(0, 3).join(', ') }}</span>
+            </li>
+          </ul>
+
+          <div class="flex justify-center gap-2 pt-2">
+            <button @click="checkPair(pairInput)" class="bg-teal-500 hover:bg-teal-400 text-slate-950 font-black px-6 py-2 rounded-xl text-xs">KONTROL ET</button>
+            <button v-if="isHost || !isConnected" @click="generateRandomPair(true)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-4 py-2 rounded-xl text-xs">Yeni Maç</button>
           </div>
-          <p v-if="pairFeedback" :class="pairFeedback.success ? 'text-emerald-400' : 'text-rose-400'" class="text-xs font-bold mt-2">
+          <p v-if="pairFeedback" :class="pairFeedback.success ? 'text-emerald-400' : 'text-rose-400'" class="text-xs font-bold mt-2 text-center">
             {{ pairFeedback.text }}
           </p>
         </div>
@@ -226,7 +271,7 @@
               <span>{{ currentChallenge.title }}</span>
             </div>
             <p class="text-xs text-slate-400">
-              Kural: <b class="text-slate-200">{{ currentMaxPicks }} oyuncu</b> ile ortak hedef: <b class="text-cyan-400">{{ targetGoal }} {{ currentChallenge.unit }}</b>
+              Kural: <b class="text-slate-200">{{ currentMaxPicks }} oyuncu</b> ile hedef: <b class="text-cyan-400">{{ targetGoal }} {{ currentChallenge.unit }}</b> (Her isim: <b>+5 Puan</b>)
             </p>
           </div>
           <button v-if="isHost || !isConnected" @click="resetTargetRound(true)" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold border border-slate-700">
@@ -247,17 +292,31 @@
           </div>
         </div>
 
-        <div v-if="targetPicks.length < currentMaxPicks" class="max-w-md mx-auto flex gap-2 mb-6">
-          <input 
-            v-model="targetInput" 
-            @keyup.enter="addTarget" 
-            placeholder="Oyuncu adı..." 
-            class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm outline-none focus:border-cyan-400">
-          <button @click="addTarget" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black px-4 py-2 rounded-xl text-xs">Ekle</button>
+        <div v-if="targetPicks.length < currentMaxPicks" class="max-w-md mx-auto relative text-left mb-6">
+          <div class="flex gap-2">
+            <input 
+              v-model="targetInput" 
+              @input="onSearchInput(targetInput)"
+              placeholder="Oyuncu adı yazmaya başla..." 
+              class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm outline-none focus:border-cyan-400">
+            <button @click="addTarget(targetInput)" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black px-4 py-2 rounded-xl text-xs">Ekle</button>
+          </div>
+
+          <!-- Açılır Öneri Listesi -->
+          <ul v-if="suggestions.length" class="absolute z-20 left-0 right-16 bg-slate-900 border border-slate-700 rounded-xl mt-1 max-h-40 overflow-y-auto shadow-2xl">
+            <li 
+              v-for="p in suggestions" 
+              :key="p.name" 
+              @click="selectSuggestion(p.name, 'target')"
+              class="px-3 py-2 text-xs hover:bg-slate-800 cursor-pointer flex justify-between items-center border-b border-slate-800/50">
+              <span class="font-bold text-slate-200">{{ p.name }}</span>
+              <span class="text-[10px] text-cyan-400 font-bold">{{ p[currentChallenge.prop] }} {{ currentChallenge.unit }}</span>
+            </li>
+          </ul>
         </div>
 
         <div v-else class="mb-6 space-y-3">
-          <p class="font-black text-lg text-emerald-400">Challenge Tamamlandı! Hedefe Fark: {{ Math.abs(targetGoal - targetTotal) }}</p>
+          <p class="font-black text-lg text-emerald-400">Challenge Bitti! Hedefe Fark: {{ Math.abs(targetGoal - targetTotal) }}</p>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-xl mx-auto">
@@ -285,7 +344,16 @@
         ];
         const activeMode = ref('tictactoe');
 
-        // RESMİ KULÜP LOGO HAVUZU
+        // NICK & SCOREBOARD
+        const myNick = ref("Oyuncu-" + Math.floor(10 + Math.random() * 90));
+        const opponentNick = ref("Rakip");
+        const myScore = ref(0);
+        const opponentScore = ref(0);
+
+        // O EL KULLANILMIŞ OYUNCULAR HAVUZU (Anti-duplication)
+        const usedPlayersThisRound = ref([]);
+
+        // RESMİ LOGOLAR
         const clubLogos = {
           "Real Madrid": "https://upload.wikimedia.org/wikipedia/en/5/56/Real_Madrid_CF.svg",
           "Barcelona": "https://upload.wikimedia.org/wikipedia/en/4/47/FC_Barcelona_%28crest%29.svg",
@@ -305,7 +373,7 @@
           "Porto": "https://upload.wikimedia.org/wikipedia/en/f/f1/FC_Porto.svg"
         };
 
-        // MULTIPLAYER (PEERJS) DURUMLARI
+        // MULTIPLAYER (PEERJS)
         const peer = ref(null);
         const conn = ref(null);
         const myPeerId = ref("");
@@ -315,14 +383,48 @@
         const isHost = ref(false);
         const isMyTurn = ref(true);
 
+        // OTO-TAMAMLAMA (AUTOCOMPLETE)
+        const suggestions = ref([]);
+        const onSearchInput = (query) => {
+          if (!query || query.trim().length < 2) {
+            suggestions.value = [];
+            return;
+          }
+          const q = query.toLowerCase();
+          suggestions.value = playersDB.filter(p => p.name.toLowerCase().includes(q)).slice(0, 6);
+        };
+
+        const selectSuggestion = (name, mode) => {
+          suggestions.value = [];
+          if (mode === 'ttt') {
+            tttInput.value = name;
+            submitTttGuess(name);
+          } else if (mode === 'pair') {
+            pairInput.value = name;
+            checkPair(name);
+          } else if (mode === 'target') {
+            targetInput.value = name;
+            addTarget(name);
+          }
+        };
+
         const sendData = (type, payload) => {
           if (conn.value && isConnected.value) {
             conn.value.send({ type, payload });
           }
         };
 
+        const syncNick = () => {
+          sendData('SYNC_NICK', { nick: myNick.value, score: myScore.value });
+        };
+
         const handleIncomingData = (data) => {
-          if (data.type === 'SYNC_MODE') {
+          if (data.type === 'SYNC_NICK') {
+            opponentNick.value = data.payload.nick;
+            opponentScore.value = data.payload.score;
+          } else if (data.type === 'UPDATE_SCORE') {
+            opponentScore.value = data.payload.score;
+          } else if (data.type === 'SYNC_MODE') {
             activeMode.value = data.payload;
           } else if (data.type === 'TTT_BOARD') {
             tttRows.value = data.payload.rows;
@@ -337,17 +439,20 @@
             randomPair.value = data.payload;
             pairFeedback.value = null;
           } else if (data.type === 'PAIR_SOLVED') {
-            pairFeedback.value = { success: true, text: `Rakip bildi: ${data.payload.name}!` };
+            pairFeedback.value = { success: true, text: `${data.payload.by} bildi (+15 Puan): ${data.payload.name}!` };
+            usedPlayersThisRound.value.push(data.payload.name.toLowerCase());
             setTimeout(() => {
               if (isHost.value) generateRandomPair(true);
-            }, 1200);
+            }, 1400);
           } else if (data.type === 'SYNC_TARGET') {
             currentChallenge.value = data.payload.challenge;
             targetGoal.value = data.payload.goal;
             currentMaxPicks.value = data.payload.maxPicks;
             targetPicks.value = data.payload.picks;
+            usedPlayersThisRound.value = [];
           } else if (data.type === 'TARGET_ADD') {
-            targetPicks.value.push(data.payload);
+            targetPicks.value.push(data.payload.player);
+            usedPlayersThisRound.value.push(data.payload.player.name.toLowerCase());
           }
         };
 
@@ -358,14 +463,12 @@
           isMyTurn.value = true;
 
           peer.value = new Peer('otto-' + randCode);
-          peer.value.on('open', (id) => {
-            myPeerId.value = id;
-          });
-
+          peer.value.on('open', (id) => { myPeerId.value = id; });
           peer.value.on('connection', (c) => {
             conn.value = c;
             conn.value.on('open', () => {
               isConnected.value = true;
+              syncNick();
               sendData('TTT_BOARD', {
                 rows: tttRows.value,
                 cols: tttCols.value,
@@ -390,6 +493,7 @@
             conn.value = peer.value.connect('otto-' + code);
             conn.value.on('open', () => {
               isConnected.value = true;
+              syncNick();
             });
             conn.value.on('data', handleIncomingData);
           });
@@ -454,32 +558,36 @@
 
         const openTttInput = (r, c) => {
           if (isConnected.value && !isMyTurn.value) {
-            alert("Şu an rakibin sırası! Hamle yapmasını bekle.");
+            alert("Şu an rakibin sırası!");
             return;
           }
           if (tttGrid.value[r][c]) return;
           selectedCell.value = { r, c };
           tttInput.value = "";
           tttError.value = "";
+          suggestions.value = [];
         };
 
-        const submitTttGuess = () => {
-          if (!tttInput.value || !selectedCell.value) return;
+        const submitTttGuess = (nameToTest) => {
+          const val = (nameToTest || tttInput.value).trim().toLowerCase();
+          if (!val || !selectedCell.value) return;
           const club1 = tttRows.value[selectedCell.value.r];
           const club2 = tttCols.value[selectedCell.value.c];
-          const val = tttInput.value.trim().toLowerCase();
 
           const found = playersDB.find(p => 
-            p.name.toLowerCase().includes(val) &&
-            p.clubs.includes(club1) &&
-            p.clubs.includes(club2)
+            p.name.toLowerCase() === val || p.name.toLowerCase().includes(val)
           );
 
-          if (found) {
+          if (found && found.clubs.includes(club1) && found.clubs.includes(club2)) {
             const r = selectedCell.value.r;
             const c = selectedCell.value.c;
             tttGrid.value[r][c] = found.name;
             selectedCell.value = null;
+            suggestions.value = [];
+
+            // +10 Puan
+            myScore.value += 10;
+            sendData('UPDATE_SCORE', { score: myScore.value });
 
             if (isConnected.value) {
               isMyTurn.value = false;
@@ -502,24 +610,37 @@
           randomPair.value = { t1: shuffledClubs[0], t2: shuffledClubs[1] };
           pairInput.value = "";
           pairFeedback.value = null;
+          suggestions.value = [];
 
           if (sync) sendData('SYNC_PAIR', randomPair.value);
         };
 
-        const checkPair = () => {
-          const val = pairInput.value.trim().toLowerCase();
+        const checkPair = (nameToTest) => {
+          const val = (nameToTest || pairInput.value).trim().toLowerCase();
+          if (!val) return;
+
+          // Mükerrer oyuncu kontrolü
+          if (usedPlayersThisRound.value.includes(val)) {
+            pairFeedback.value = { success: false, text: "Bu futbolcu bu tur zaten kullanıldı!" };
+            return;
+          }
+
           const match = playersDB.find(p => 
-            p.name.toLowerCase().includes(val) &&
+            (p.name.toLowerCase() === val || p.name.toLowerCase().includes(val)) &&
             p.clubs.includes(randomPair.value.t1) &&
             p.clubs.includes(randomPair.value.t2)
           );
 
           if (match) {
-            pairFeedback.value = { success: true, text: `Bildin: ${match.name}!` };
-            sendData('PAIR_SOLVED', { name: match.name });
+            myScore.value += 15;
+            sendData('UPDATE_SCORE', { score: myScore.value });
+            usedPlayersThisRound.value.push(match.name.toLowerCase());
+
+            pairFeedback.value = { success: true, text: `Bildin (+15 Puan): ${match.name}!` };
+            sendData('PAIR_SOLVED', { name: match.name, by: myNick.value });
             setTimeout(() => {
               generateRandomPair(true);
-            }, 1200);
+            }, 1400);
           } else {
             pairFeedback.value = { success: false, text: "Eşleşme bulunamadı!" };
           }
@@ -549,6 +670,8 @@
           currentMaxPicks.value = 5;
           targetPicks.value = [];
           targetInput.value = "";
+          usedPlayersThisRound.value = [];
+          suggestions.value = [];
 
           if (sync) {
             sendData('SYNC_TARGET', {
@@ -560,20 +683,32 @@
           }
         };
 
-        const addTarget = () => {
-          const val = targetInput.value.trim().toLowerCase();
-          const found = playersDB.find(p => p.name.toLowerCase().includes(val));
+        const addTarget = (nameToTest) => {
+          const val = (nameToTest || targetInput.value).trim().toLowerCase();
+          if (!val) return;
+
+          // Mükerrer oyuncu kontrolü
+          if (usedPlayersThisRound.value.includes(val)) {
+            alert("Bu oyuncu bu turda zaten eklendi!");
+            return;
+          }
+
+          const found = playersDB.find(p => p.name.toLowerCase() === val || p.name.toLowerCase().includes(val));
           if (!found) {
             alert("Oyuncu bulunamadı!");
             return;
           }
-          if (targetPicks.value.some(p => p.name === found.name)) {
-            alert("Bu oyuncuyu zaten ekledin!");
-            return;
-          }
+
           targetPicks.value.push(found);
-          sendData('TARGET_ADD', found);
+          usedPlayersThisRound.value.push(found.name.toLowerCase());
+          
+          // +5 Puan
+          myScore.value += 5;
+          sendData('UPDATE_SCORE', { score: myScore.value });
+
+          sendData('TARGET_ADD', { player: found });
           targetInput.value = "";
+          suggestions.value = [];
         };
 
         onMounted(() => {
@@ -587,6 +722,16 @@
           activeMode,
           changeMode,
           clubLogos,
+          // Nick & Score
+          myNick,
+          opponentNick,
+          myScore,
+          opponentScore,
+          syncNick,
+          // Autocomplete
+          suggestions,
+          onSearchInput,
+          selectSuggestion,
           // Multiplayer
           myPeerId,
           roomCode,
