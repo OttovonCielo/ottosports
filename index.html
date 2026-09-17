@@ -141,7 +141,7 @@
     </header>
 
     <!-- SCOREBOARD & ODA BİLGİSİ -->
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 mb-4 space-y-3">
+    <div v-if="isConnected" class="bg-slate-900 border border-slate-800 rounded-2xl p-3 mb-4 space-y-3">
       <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
         <div class="flex items-center gap-2">
           <span class="relative flex h-2.5 w-2.5">
@@ -307,7 +307,6 @@
           </div>
         </div>
 
-        <!-- Birebir Senkronize Eşleşme Alanı -->
         <div class="flex items-center justify-center gap-3 sm:gap-6 my-4">
           <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl w-36 text-center flex flex-col items-center">
             <img v-if="getVisualLogo(randomPair.t1)" :src="getVisualLogo(randomPair.t1)" class="w-12 h-12 object-contain mb-1.5 drop-shadow rounded-sm">
@@ -483,9 +482,7 @@
 
         const usedPlayersThisRound = ref([]);
 
-        // =========================================================================
-        // GÜNCEL LOGO / BAYRAK HAVUZU
-        // =========================================================================
+        // LOGO / BAYRAK HAVUZU
         const visualLogos = {
           "Real Madrid": "https://upload.wikimedia.org/wikipedia/en/5/56/Real_Madrid_CF.svg",
           "Barcelona": "https://upload.wikimedia.org/wikipedia/en/4/47/FC_Barcelona_%28crest%29.svg",
@@ -534,11 +531,8 @@
 
         const getVisualLogo = (label) => visualLogos[label] || null;
 
-        // =========================================================================
-        // FC 26 İKONLAR + 2000 SONRASI (17.09.2026 İTİBARIYLA GÜNCEL KADROLAR)
-        // =========================================================================
+        // OYUNCU HAVUZU
         const playersDB = [
-          // FC 26 İkonları
           { name: "Pelé", nat: "Brezilya", clubs: ["Santos", "New York Cosmos"], teammateWith: ["Garrincha"], trophiesWon: ["Dünya Kupası"], finalsLost: [], weight: 73, height: 173, age: 82, assists: 210, yellowCards: 10 },
           { name: "Diego Maradona", nat: "Arjantin", clubs: ["Barcelona", "Napoli", "Sevilla", "Boca Juniors"], teammateWith: ["Careca"], trophiesWon: ["Dünya Kupası", "UEFA Kupası", "Serie A"], finalsLost: ["Dünya Kupası 1990"], weight: 70, height: 165, age: 60, assists: 152, yellowCards: 48 },
           { name: "Johan Cruyff", nat: "Hollanda", clubs: ["Ajax", "Barcelona", "Feyenoord"], teammateWith: ["Ruud Krol"], trophiesWon: ["Şampiyonlar Ligi", "La Liga", "Eredivisie"], finalsLost: ["Dünya Kupası 1974"], weight: 68, height: 178, age: 68, assists: 190, yellowCards: 25 },
@@ -555,8 +549,6 @@
           { name: "Kaka", nat: "Brezilya", clubs: ["Milan", "Real Madrid", "Sao Paulo", "Orlando City"], teammateWith: ["Cristiano Ronaldo", "Paolo Maldini"], trophiesWon: ["Şampiyonlar Ligi", "Dünya Kupası", "Serie A", "La Liga"], finalsLost: ["Şampiyonlar Ligi 2005"], weight: 82, height: 186, age: 42, assists: 145, yellowCards: 38 },
           { name: "Wayne Rooney", nat: "İngiltere", clubs: ["Everton", "Manchester United"], teammateWith: ["Cristiano Ronaldo", "Robin van Persie"], trophiesWon: ["Şampiyonlar Ligi", "Premier Lig"], finalsLost: ["Şampiyonlar Ligi 2009", "Şampiyonlar Ligi 2011"], weight: 83, height: 176, age: 38, assists: 175, yellowCards: 110 },
           { name: "Gareth Bale", nat: "Galler", clubs: ["Tottenham", "Real Madrid", "Southampton"], teammateWith: ["Cristiano Ronaldo", "Karim Benzema", "Luka Modric"], trophiesWon: ["Şampiyonlar Ligi", "La Liga"], finalsLost: [], weight: 81, height: 185, age: 35, assists: 140, yellowCards: 32 },
-
-          // 2000 Sonrası & 17.09.2026 İtibarıyla Güncel Yıldızlar
           { name: "Victor Osimhen", nat: "Nijerya", clubs: ["Wolfsburg", "Charleroi", "Lille", "Napoli", "Galatasaray"], teammateWith: ["Dries Mertens", "Mauro Icardi"], trophiesWon: ["Serie A"], finalsLost: ["Afrika Uluslar Kupası 2024"], weight: 78, height: 186, age: 25, assists: 32, yellowCards: 24 },
           { name: "Mauro Icardi", nat: "Arjantin", clubs: ["Sampdoria", "Inter", "PSG", "Galatasaray"], teammateWith: ["Lionel Messi", "Kylian Mbappe", "Dries Mertens"], trophiesWon: ["Ligue 1", "Süper Lig"], finalsLost: ["Şampiyonlar Ligi 2020"], weight: 75, height: 181, age: 31, assists: 55, yellowCards: 22 },
           { name: "Edin Dzeko", nat: "Bosna Hersek", clubs: ["Wolfsburg", "Manchester City", "Roma", "Inter", "Fenerbahçe"], teammateWith: ["Lautaro Martinez", "Dusan Tadic"], trophiesWon: ["Premier Lig", "Bundesliga", "Coppa Italia"], finalsLost: ["Şampiyonlar Ligi 2023"], weight: 84, height: 193, age: 38, assists: 145, yellowCards: 44 },
@@ -943,7 +935,7 @@
         const isMyTurn = ref(true);
 
         const sendData = (type, payload) => {
-          if (conn.value && isConnected.value) {
+          if (conn.value && conn.value.open) {
             conn.value.send({ type, payload });
           }
         };
@@ -952,8 +944,36 @@
           sendData('SYNC_NICK', { nick: myNick.value, score: myScore.value });
         };
 
+        // Gelen verileri işleme
         const handleIncomingData = (data) => {
-          if (data.type === 'SYNC_NICK') {
+          if (!data) return;
+
+          // Katılan oyuncu oyunu istediğinde host'un oyunu göndermesi
+          if (data.type === 'REQUEST_SYNC' && isHost.value) {
+            syncNick();
+            if (activeMode.value === 'tictactoe') {
+              if (tttCols.value.length === 0) generateAdvancedBoard(false);
+              sendData('SYNC_TTT_BOARD', {
+                rows: tttRows.value,
+                cols: tttCols.value,
+                grid: tttGrid.value,
+                nextTurnIsHost: isMyTurn.value
+              });
+            } else if (activeMode.value === 'three_two_one') {
+              if (!randomPair.value.t1) generateRandomPair(false);
+              sendData('SYNC_PAIR', {
+                pair: randomPair.value,
+                category: pairCategory.value
+              });
+            } else if (activeMode.value === 'target') {
+              if (targetPicks.value.length === 0) resetTargetRound(false);
+              sendData('SYNC_TARGET_ROUND', {
+                challenge: currentChallenge.value,
+                goal: targetGoal.value,
+                maxPicks: currentMaxPicks.value
+              });
+            }
+          } else if (data.type === 'SYNC_NICK') {
             opponentNick.value = data.payload.nick;
             opponentScore.value = data.payload.score;
           } else if (data.type === 'UPDATE_SCORE') {
@@ -962,7 +982,7 @@
             tttRows.value = data.payload.rows;
             tttCols.value = data.payload.cols;
             tttGrid.value = data.payload.grid;
-            isMyTurn.value = false;
+            isMyTurn.value = !data.payload.nextTurnIsHost;
           } else if (data.type === 'TTT_MOVE') {
             const { r, c, name } = data.payload;
             tttGrid.value[r][c] = name;
@@ -1030,12 +1050,18 @@
 
           peer.value = new Peer();
           peer.value.on('open', () => {
-            conn.value = peer.value.connect('otto-' + code);
-            conn.value.on('open', () => {
+            const connection = peer.value.connect('otto-' + code);
+            conn.value = connection;
+
+            connection.on('open', () => {
               isConnected.value = true;
               syncNick();
+              // Katılan oyuncu oyunu anında talep eder
+              connection.send({ type: 'REQUEST_SYNC' });
             });
-            conn.value.on('data', handleIncomingData);
+
+            // Katılan tarafta veri dinleyiciyi anında bağlıyoruz
+            connection.on('data', handleIncomingData);
           });
         };
 
@@ -1048,7 +1074,6 @@
           joinCodeInput.value = "";
         };
 
-        // Her mod değişiminde yeniden oda kurulur
         const changeMode = (modeId) => {
           if (activeMode.value === modeId) return;
           leaveRoom();
